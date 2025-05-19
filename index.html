@@ -74,6 +74,8 @@
     }
   </script>
 
+
+
   <style>
     /* モバイルナビが開いたときの全画面オーバーレイ */
     #nav-menu.open {
@@ -237,6 +239,15 @@
   }
   </style>
 
+  /* ナビゲーション在庫用アニメーション */
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.03); }
+  }
+  .animate-pulse-soft {
+    animation: pulse-soft 2.5s ease-in-out infinite;
+  }
+
   </style>
 
   <!-- Google Fonts 読み込み - 拡張 -->
@@ -301,8 +312,24 @@
       <li role="none"><a href="#price" class="bg-primary-500 text-white px-5 py-2 rounded-full hover:bg-primary-600 hover:shadow-lg transition-all duration-300 flex items-center space-x-1 text-base" role="menuitem">
         <span>今すぐチェック</span>
         <svg class="w-4 h-4 ml-1"><use xlink:href="#icon-arrow-right"/></svg>
-      </a></li>
-    </ul>
+
+        </a></li>
+      </ul>
+      <!-- 残り台数表示 -->
+      <div id="nav-stock-info" class="hidden md:flex items-center space-x-3 text-sm text-red-600 ml-4">
+        <div class="flex items-center bg-red-100 rounded-full px-3 py-1 font-semibold animate-pulse-soft">
+          <svg class="w-4 h-4 mr-1 text-red-500" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M16 2H4a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2zM9 6h2v5H9V6zm0 6h2v2H9v-2z" />
+          </svg>
+          残り <span id="stock-count-nav" class="mx-1 font-bold">--</span> 台
+        </div>
+        <div class="flex items-center bg-pink-100 text-pink-700 rounded-full px-3 py-1 font-semibold">
+          <svg class="w-4 h-4 mr-1 text-pink-500" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M10 2a6 6 0 00-6 6v2a6 6 0 0012 0V8a6 6 0 00-6-6zM8 12a2 2 0 114 0H8z" />
+          </svg>
+          <span id="cart-count-nav" class="font-bold">--</span> 人が検討中
+        </div>
+      </div>
     
 <!-- ハンバーガーメニューボタン -->
 <button id="nav-toggle"
@@ -1425,6 +1452,28 @@ navMenu.addEventListener('click', e => {
       update();
       const timer = setInterval(update, 1000);
     }
+  </script>
+
+  <script>
+  (function () {
+    const stockEl = document.getElementById('stock-count-nav');
+    const cartEl = document.getElementById('cart-count-nav');
+
+    let stock = 7;
+    let cart = 36 + Math.floor(Math.random() * 20);
+
+    function updateNumbers() {
+      if (stock > 1 && Math.random() > 0.8) stock--;
+      cart += Math.floor(Math.random() * 3 - 1);
+      if (cart < 30) cart = 30;
+
+      if (stockEl) stockEl.textContent = stock;
+      if (cartEl) cartEl.textContent = cart;
+    }
+
+    updateNumbers();
+    setInterval(updateNumbers, 4000);
+  })();
   </script>
 
 <script>
