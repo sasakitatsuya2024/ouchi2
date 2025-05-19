@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="Shift_JIS">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>月齢・月出入時刻アプリ</title>
+  <style>
+    :root {
+      --bg-color: #ffffff;
+      --text-color: #000000;
+      --primary-color: #4CAF50;
+      --accent-color: #45a049;
+    }
+    /* ダークモード用 */
+    .dark-mode {
+      --bg-color: #121212;
+      --text-color: #f0f0f0;
+    }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-size: 18px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    /* タブナビゲーションのスタイル */
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid var(--primary-color);
+      margin-bottom: 20px;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px;
+      cursor: pointer;
+      background-color: var(--bg-color);
+      border: none;
+      outline: none;
+      font-size: 18px;
+      transition: background-color 0.3s;
+    }
+    .tab:hover {
+      background-color: #e0e0e0;
+    }
+    .tab.active {
+      border-bottom: 4px solid var(--primary-color);
+      font-weight: bold;
+    }
+    /* 各画面（タブ） */
+    .screen {
+      display: none;
+    }
+    .screen.active {
+      display: block;
+    }
+    h1 {
+      font-size: 32px;
+      margin-bottom: 20px;
+    }
+    .data-field {
+      margin-bottom: 15px;
+    }
+    .label {
+      font-weight: bold;
+      margin-right: 8px;
+    }
+    button {
+      font-size: 20px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      background-color: var(--primary-color);
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: var(--accent-color);
+    }
+    /* 設定画面用 */
+    .settings-group {
+      margin-bottom: 15px;
+    }
+    .settings-group label {
+      margin-right: 10px;
+    }
+    /* 月相カレンダー */
+    .calendar {
+      display: flex;
+      flex-wrap: wrap;
+    }
+    .calendar-day {
+      width: 14.28%;
+      border: 1px solid #ddd;
+      padding: 5px;
+      box-sizing: border-box;
+      text-align: center;
+      font-size: 14px;
+    }
+    hr {
+      margin: 20px 0;
+      border: 0;
+      border-top: 1px solid #ccc;
+    }
+  </style>
+  <!-- SunCalcライブラリの読み込み -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.8.0/suncalc.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <!-- タブナビゲーション -->
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('homeTab')">ホーム</button>
+      <button class="tab" onclick="showTab('settingsTab')">設定/FAQ</button>
+    </div>
+    
+    <!-- ホームタブ（ホーム＋撮影サポート機能統合） -->
+    <div id="homeTab" class="screen active">
+      <h1>月齢・月出入時刻アプリ</h1>
+      <!-- 現在日時・GPS情報・基本月情報 -->
+      <div class="data-field">
+        <span class="label">現在日時：</span>
+        <span id="currentDateTime"></span>
+      </div>
+      <div class="data-field">
+        <span class="label">GPS位置：</span>
+        <span id="gpsCoords">未取得</span>
+      </div>
+      <div class="data-field">
+        <span class="label">月齢：</span>
+        <span id="moonPhase">-</span>
+      </div>
+      <div class="data-field">
+        <span class="label">月の出：</span>
+        <span id="moonrise">-</span>
+      </div>
+      <div class="data-field">
+        <span class="label">月の入：</span>
+        <span id="moonset">-</span>
+      </div>
+      
+      <hr>
+      
+      <!-- 撮影サポート機能の追加情報 -->
+      <h2>撮影サポート機能</h2>
+      <div class="data-field">
+        <span class="label">月齢：</span>
+        <span id="shootingMoonPhase">満月 (0.32)</span>
+      </div>
+      <div class="data-field">
+        <span class="label">月の出：</span>
+        <span id="shootingMoonrise">11:45</span>
+      </div>
+      <div class="data-field">
+        <span class="label">月の入：</span>
+        <span id="shootingMoonset">02:11</span>
+      </div>
+      
+      <!-- GPS取得と月情報更新ボタン -->
+      <div class="data-field">
+        <button id="btnGetLocation">GPS情報を取得</button>
+      </div>
+      <div class="data-field">
+        <button onclick="calculateMoonData()">月情報更新</button>
+      </div>
+      
+      <!-- 月相カレンダー -->
+      <div class="data-field">
+        <h2>月相カレンダー</h2>
+        <div id="moonCalendar" class="calendar">
+          <!-- カレンダーセルはJavaScriptで生成 -->
+        </div>
+      </div>
+    </div>
+    
+    <!-- 設定/FAQタブ -->
+    <div id="settingsTab" class="screen">
+      <h1>設定 / FAQ</h1>
+      <div class="settings-group">
+        <span class="label">文字サイズ:</span>
+        <label><input type="radio" name="fontSize" value="16" onchange="updateFontSize(this.value)" checked> 標準</label>
+        <label><input type="radio" name="fontSize" value="20" onchange="updateFontSize(this.value)"> 大きめ</label>
+        <label><input type="radio" name="fontSize" value="24" onchange="updateFontSize(this.value)"> 特大</label>
+      </div>
+      <div class="settings-group">
+        <span class="label">テーマ:</span>
+        <label><input type="radio" name="theme" value="light" onchange="updateTheme(this.value)" checked> ライト</label>
+        <label><input type="radio" name="theme" value="dark" onchange="updateTheme(this.value)"> ダーク</label>
+      </div>
+      <div class="settings-group">
+        <span class="label">通知設定:</span>
+        <label><input type="checkbox" id="notifNewMoon"> 新月リマインダー</label>
+        <label><input type="checkbox" id="notifGoldenHour"> ゴールデンアワー通知</label>
+      </div>
+      <div class="settings-group">
+        <span class="label">GPS自動取得:</span>
+        <label><input type="checkbox" id="gpsAuto" checked> ON</label>
+      </div>
+      <h2>FAQ</h2>
+      <p>
+        Q: GPS情報が取得できません。<br>
+        A: ブラウザの設定で位置情報の許可が有効になっているか確認してください。<br><br>
+        Q: 月の出入時刻がずれる場合は？<br>
+        A: 地形や標高の影響による補正が必要な場合があります。設定画面で調整してください。
+      </p>
+      <div class="data-field">
+        <button onclick="showTab('homeTab')">ホームへ戻る</button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // タブ切替機能
+    function showTab(tabId) {
+      var screens = document.getElementsByClassName('screen');
+      for (var i = 0; i < screens.length; i++) {
+        screens[i].classList.remove('active');
+      }
+      document.getElementById(tabId).classList.add('active');
+      
+      // タブボタンのactive状態更新
+      var tabButtons = document.querySelectorAll('.tab');
+      tabButtons.forEach(function(btn) {
+        btn.classList.remove('active');
+      });
+      if(tabId === 'homeTab'){
+        document.querySelector('.tab:nth-child(1)').classList.add('active');
+      } else if(tabId === 'settingsTab'){
+        document.querySelector('.tab:nth-child(2)').classList.add('active');
+      }
+    }
+    
+    // 現在日時の更新
+    function updateDateTime() {
+      var now = new Date();
+      document.getElementById('currentDateTime').textContent = now.toLocaleString();
+    }
+    updateDateTime();
+    setInterval(updateDateTime, 60000);
+    
+    // フォントサイズ更新
+    function updateFontSize(size) {
+      document.body.style.fontSize = size + "px";
+    }
+    
+    // テーマ更新
+    function updateTheme(theme) {
+      if (theme === "dark") {
+        document.body.classList.add("dark-mode");
+      } else {
+        document.body.classList.remove("dark-mode");
+      }
+    }
+    
+    // GPS情報取得と月情報更新（ホームタブ）
+    document.getElementById('btnGetLocation').addEventListener('click', function(){
+      if(navigator.geolocation){
+        navigator.geolocation.getCurrentPosition(function(position){
+          var lat = position.coords.latitude;
+          var lng = position.coords.longitude;
+          document.getElementById('gpsCoords').textContent = lat.toFixed(4) + ", " + lng.toFixed(4);
+          calculateMoonData();
+        }, function(error){
+          alert("位置情報の取得に失敗しました: " + error.message);
+        });
+      } else {
+        alert("このブラウザでは位置情報取得に対応していません。");
+      }
+    });
+    
+    // 月情報更新関数
+    function calculateMoonData(){
+      var gpsText = document.getElementById('gpsCoords').textContent;
+      if(gpsText === "未取得"){
+        alert("GPS情報が未取得です。");
+        return;
+      }
+      var parts = gpsText.split(",");
+      var lat = parseFloat(parts[0]);
+      var lng = parseFloat(parts[1]);
+      var now = new Date();
+      var moonTimes = SunCalc.getMoonTimes(now, lat, lng);
+      var moonIllum = SunCalc.getMoonIllumination(now);
+      
+      function formatTime(d){
+        if(!d) return "取得不可";
+        return d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
+      }
+      
+      document.getElementById('moonrise').textContent = formatTime(moonTimes.rise);
+      document.getElementById('moonset').textContent = formatTime(moonTimes.set);
+      
+      var phase = moonIllum.phase;
+      var phaseText = "";
+      if(phase < 0.03 || phase > 0.97){
+        phaseText = "新月";
+      } else if(phase < 0.25){
+        phaseText = "上弦の月";
+      } else if(phase < 0.53){
+        phaseText = "満月";
+      } else if(phase < 0.75){
+        phaseText = "下弦の月";
+      } else {
+        phaseText = "下弦に近い月";
+      }
+      document.getElementById('moonPhase').textContent = phaseText + " (" + phase.toFixed(2) + ")";
+      
+      // 月相カレンダーの生成（今月分）
+      generateMoonCalendar(now, lat, lng);
+    }
+    
+    // 月相カレンダー生成関数（シンプルな例）
+    function generateMoonCalendar(currentDate, lat, lng){
+      var calendarDiv = document.getElementById("moonCalendar");
+      calendarDiv.innerHTML = "";
+      var year = currentDate.getFullYear();
+      var month = currentDate.getMonth(); // 0～11
+      var firstDay = new Date(year, month, 1);
+      var lastDay = new Date(year, month + 1, 0);
+      var totalDays = lastDay.getDate();
+      var startDay = firstDay.getDay(); // 0（日）～6（土）
+      
+      // 空白セルの追加
+      for(var i = 0; i < startDay; i++){
+        var emptyCell = document.createElement("div");
+        emptyCell.className = "calendar-day";
+        calendarDiv.appendChild(emptyCell);
+      }
+      
+      // 各日付セルの生成
+      for(var d = 1; d <= totalDays; d++){
+        var dayCell = document.createElement("div");
+        dayCell.className = "calendar-day";
+        var date = new Date(year, month, d);
+        var moonIllum = SunCalc.getMoonIllumination(date);
+        var phase = moonIllum.phase;
+        var phaseEmoji = "";
+        if(phase < 0.03 || phase > 0.97){
+          phaseEmoji = "?";
+        } else if(phase < 0.25){
+          phaseEmoji = "?";
+        } else if(phase < 0.53){
+          phaseEmoji = "?";
+        } else if(phase < 0.75){
+          phaseEmoji = "?";
+        } else {
+          phaseEmoji = "?";
+        }
+        dayCell.innerHTML = d + "<br>" + phaseEmoji;
+        calendarDiv.appendChild(dayCell);
+      }
+    }
+  </script>
+</body>
+</html>
