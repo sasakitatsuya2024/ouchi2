@@ -1193,6 +1193,30 @@
     <div class="mt-8 text-gray-700 text-lg">
       <span class="font-semibold">⏰ 締切まで残り：</span><span id="countdown" class="font-mono text-xl text-red-500"></span>
     </div>
+<div id="cart-stats" class="text-sm text-red-600 font-semibold text-center my-4">
+  現在 <span id="cart-users">--</span> 人がカートに入れました｜<span id="items-left">--</span> 台残り
+</div>
+
+<script>
+(function () {
+  const cartUsersBase = 27;
+  const itemsLeftBase = 7;
+
+  const cartUsersEl = document.getElementById('cart-users');
+  const itemsLeftEl = document.getElementById('items-left');
+
+  function updateStats() {
+    const fluctuation = Math.floor(Math.random() * 5); // ±0〜4
+    cartUsersEl.textContent = cartUsersBase + fluctuation;
+
+    const itemsLeft = itemsLeftBase - Math.floor(Math.random() * 2); // 最大1減る
+    itemsLeftEl.textContent = itemsLeft > 0 ? itemsLeft : 1;
+  }
+
+  updateStats();
+  setInterval(updateStats, 5000); // 5秒に1回変動（見張ってる感）
+})();
+</script>
   </div>
 </section>
   <!-- Price & CTA -->
