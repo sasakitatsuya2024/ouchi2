@@ -1,360 +1,1575 @@
 <!DOCTYPE html>
+
 <html lang="ja">
 <head>
-  <meta charset="Shift_JIS">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>����E���o�������A�v��</title>
-  <style>
-    :root {
-      --bg-color: #ffffff;
-      --text-color: #000000;
-      --primary-color: #4CAF50;
-      --accent-color: #45a049;
-    }
-    /* �_�[�N���[�h�p */
-    .dark-mode {
-      --bg-color: #121212;
-      --text-color: #f0f0f0;
-    }
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      font-size: 18px;
-    }
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-    }
-    /* �^�u�i�r�Q�[�V�����̃X�^�C�� */
-    .tabs {
-      display: flex;
-      border-bottom: 2px solid var(--primary-color);
-      margin-bottom: 20px;
-    }
-    .tab {
-      flex: 1;
-      text-align: center;
-      padding: 10px;
-      cursor: pointer;
-      background-color: var(--bg-color);
-      border: none;
-      outline: none;
-      font-size: 18px;
-      transition: background-color 0.3s;
-    }
-    .tab:hover {
-      background-color: #e0e0e0;
-    }
-    .tab.active {
-      border-bottom: 4px solid var(--primary-color);
-      font-weight: bold;
-    }
-    /* �e��ʁi�^�u�j */
-    .screen {
-      display: none;
-    }
-    .screen.active {
-      display: block;
-    }
-    h1 {
-      font-size: 32px;
-      margin-bottom: 20px;
-    }
-    .data-field {
-      margin-bottom: 15px;
-    }
-    .label {
-      font-weight: bold;
-      margin-right: 8px;
-    }
-    button {
-      font-size: 20px;
-      padding: 10px 20px;
-      border: none;
-      border-radius: 4px;
-      background-color: var(--primary-color);
-      color: white;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: var(--accent-color);
-    }
-    /* �ݒ��ʗp */
-    .settings-group {
-      margin-bottom: 15px;
-    }
-    .settings-group label {
-      margin-right: 10px;
-    }
-    /* �����J�����_�[ */
-    .calendar {
-      display: flex;
-      flex-wrap: wrap;
-    }
-    .calendar-day {
-      width: 14.28%;
-      border: 1px solid #ddd;
-      padding: 5px;
-      box-sizing: border-box;
-      text-align: center;
-      font-size: 14px;
-    }
-    hr {
-      margin: 20px 0;
-      border: 0;
-      border-top: 1px solid #ccc;
-    }
-  </style>
-  <!-- SunCalc���C�u�����̓ǂݍ��� -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.8.0/suncalc.min.js"></script>
-</head>
-<body>
-  <div class="container">
-    <!-- �^�u�i�r�Q�[�V���� -->
-    <div class="tabs">
-      <button class="tab active" onclick="showTab('homeTab')">�z�[��</button>
-      <button class="tab" onclick="showTab('settingsTab')">�ݒ�/FAQ</button>
-    </div>
-    
-    <!-- �z�[���^�u�i�z�[���{�B�e�T�|�[�g�@�\�����j -->
-    <div id="homeTab" class="screen active">
-      <h1>����E���o�������A�v��</h1>
-      <!-- ���ݓ����EGPS���E��{����� -->
-      <div class="data-field">
-        <span class="label">���ݓ����F</span>
-        <span id="currentDateTime"></span>
-      </div>
-      <div class="data-field">
-        <span class="label">GPS�ʒu�F</span>
-        <span id="gpsCoords">���擾</span>
-      </div>
-      <div class="data-field">
-        <span class="label">����F</span>
-        <span id="moonPhase">-</span>
-      </div>
-      <div class="data-field">
-        <span class="label">���̏o�F</span>
-        <span id="moonrise">-</span>
-      </div>
-      <div class="data-field">
-        <span class="label">���̓��F</span>
-        <span id="moonset">-</span>
-      </div>
-      
-      <hr>
-      
-      <!-- �B�e�T�|�[�g�@�\�̒ǉ���� -->
-      <h2>�B�e�T�|�[�g�@�\</h2>
-      <div class="data-field">
-        <span class="label">����F</span>
-        <span id="shootingMoonPhase">���� (0.32)</span>
-      </div>
-      <div class="data-field">
-        <span class="label">���̏o�F</span>
-        <span id="shootingMoonrise">11:45</span>
-      </div>
-      <div class="data-field">
-        <span class="label">���̓��F</span>
-        <span id="shootingMoonset">02:11</span>
-      </div>
-      
-      <!-- GPS�擾�ƌ����X�V�{�^�� -->
-      <div class="data-field">
-        <button id="btnGetLocation">GPS�����擾</button>
-      </div>
-      <div class="data-field">
-        <button onclick="calculateMoonData()">�����X�V</button>
-      </div>
-      
-      <!-- �����J�����_�[ -->
-      <div class="data-field">
-        <h2>�����J�����_�[</h2>
-        <div id="moonCalendar" class="calendar">
-          <!-- �J�����_�[�Z����JavaScript�Ő��� -->
-        </div>
-      </div>
-    </div>
-    
-    <!-- �ݒ�/FAQ�^�u -->
-    <div id="settingsTab" class="screen">
-      <h1>�ݒ� / FAQ</h1>
-      <div class="settings-group">
-        <span class="label">�����T�C�Y:</span>
-        <label><input type="radio" name="fontSize" value="16" onchange="updateFontSize(this.value)" checked> �W��</label>
-        <label><input type="radio" name="fontSize" value="20" onchange="updateFontSize(this.value)"> �傫��</label>
-        <label><input type="radio" name="fontSize" value="24" onchange="updateFontSize(this.value)"> ����</label>
-      </div>
-      <div class="settings-group">
-        <span class="label">�e�[�}:</span>
-        <label><input type="radio" name="theme" value="light" onchange="updateTheme(this.value)" checked> ���C�g</label>
-        <label><input type="radio" name="theme" value="dark" onchange="updateTheme(this.value)"> �_�[�N</label>
-      </div>
-      <div class="settings-group">
-        <span class="label">�ʒm�ݒ�:</span>
-        <label><input type="checkbox" id="notifNewMoon"> �V�����}�C���_�[</label>
-        <label><input type="checkbox" id="notifGoldenHour"> �S�[���f���A���[�ʒm</label>
-      </div>
-      <div class="settings-group">
-        <span class="label">GPS�����擾:</span>
-        <label><input type="checkbox" id="gpsAuto" checked> ON</label>
-      </div>
-      <h2>FAQ</h2>
-      <p>
-        Q: GPS��񂪎擾�ł��܂���B<br>
-        A: �u���E�U�̐ݒ�ňʒu���̋����L���ɂȂ��Ă��邩�m�F���Ă��������B<br><br>
-        Q: ���̏o�������������ꍇ�́H<br>
-        A: �n�`��W���̉e���ɂ��␳���K�v�ȏꍇ������܂��B�ݒ��ʂŒ������Ă��������B
-      </p>
-      <div class="data-field">
-        <button onclick="showTab('homeTab')">�z�[���֖߂�</button>
-      </div>
-    </div>
-  </div>
-  
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>おうちDEピラティス® Reformer – おうちDEピラティス®</title>
+
+  <!-- SEO & SNS: ページメタデータ -->
+  <meta name="description" content="本格ピラティスマシンを、自宅で。おうちDEピラティス® Reformerであなたの"わたし時間"を取り戻す。" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="おうちDEピラティス® Reformer – おうちDEピラティス®" />
+  <meta property="og:description" content="本格ピラティスマシンを、自宅で。おうちDEピラティス® Reformerであなたの"わたし時間"を取り戻す。" />
+  <meta property="og:image" content="https://yourdomain.com/og-image.jpg" />
+  <meta property="og:url" content="https://yourdomain.com" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="/favicon.ico" />
+
+  <!-- Tailwind CSS 読み込み -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    // �^�u�ؑ֋@�\
-    function showTab(tabId) {
-      var screens = document.getElementsByClassName('screen');
-      for (var i = 0; i < screens.length; i++) {
-        screens[i].classList.remove('active');
-      }
-      document.getElementById(tabId).classList.add('active');
-      
-      // �^�u�{�^����active��ԍX�V
-      var tabButtons = document.querySelectorAll('.tab');
-      tabButtons.forEach(function(btn) {
-        btn.classList.remove('active');
-      });
-      if(tabId === 'homeTab'){
-        document.querySelector('.tab:nth-child(1)').classList.add('active');
-      } else if(tabId === 'settingsTab'){
-        document.querySelector('.tab:nth-child(2)').classList.add('active');
-      }
-    }
-    
-    // ���ݓ����̍X�V
-    function updateDateTime() {
-      var now = new Date();
-      document.getElementById('currentDateTime').textContent = now.toLocaleString();
-    }
-    updateDateTime();
-    setInterval(updateDateTime, 60000);
-    
-    // �t�H���g�T�C�Y�X�V
-    function updateFontSize(size) {
-      document.body.style.fontSize = size + "px";
-    }
-    
-    // �e�[�}�X�V
-    function updateTheme(theme) {
-      if (theme === "dark") {
-        document.body.classList.add("dark-mode");
-      } else {
-        document.body.classList.remove("dark-mode");
-      }
-    }
-    
-    // GPS���擾�ƌ����X�V�i�z�[���^�u�j
-    document.getElementById('btnGetLocation').addEventListener('click', function(){
-      if(navigator.geolocation){
-        navigator.geolocation.getCurrentPosition(function(position){
-          var lat = position.coords.latitude;
-          var lng = position.coords.longitude;
-          document.getElementById('gpsCoords').textContent = lat.toFixed(4) + ", " + lng.toFixed(4);
-          calculateMoonData();
-        }, function(error){
-          alert("�ʒu���̎擾�Ɏ��s���܂���: " + error.message);
-        });
-      } else {
-        alert("���̃u���E�U�ł͈ʒu���擾�ɑΉ����Ă��܂���B");
-      }
-    });
-    
-    // �����X�V�֐�
-    function calculateMoonData(){
-      var gpsText = document.getElementById('gpsCoords').textContent;
-      if(gpsText === "���擾"){
-        alert("GPS��񂪖��擾�ł��B");
-        return;
-      }
-      var parts = gpsText.split(",");
-      var lat = parseFloat(parts[0]);
-      var lng = parseFloat(parts[1]);
-      var now = new Date();
-      var moonTimes = SunCalc.getMoonTimes(now, lat, lng);
-      var moonIllum = SunCalc.getMoonIllumination(now);
-      
-      function formatTime(d){
-        if(!d) return "�擾�s��";
-        return d.getHours().toString().padStart(2, '0') + ":" + d.getMinutes().toString().padStart(2, '0');
-      }
-      
-      document.getElementById('moonrise').textContent = formatTime(moonTimes.rise);
-      document.getElementById('moonset').textContent = formatTime(moonTimes.set);
-      
-      var phase = moonIllum.phase;
-      var phaseText = "";
-      if(phase < 0.03 || phase > 0.97){
-        phaseText = "�V��";
-      } else if(phase < 0.25){
-        phaseText = "�㌷�̌�";
-      } else if(phase < 0.53){
-        phaseText = "����";
-      } else if(phase < 0.75){
-        phaseText = "�����̌�";
-      } else {
-        phaseText = "�����ɋ߂���";
-      }
-      document.getElementById('moonPhase').textContent = phaseText + " (" + phase.toFixed(2) + ")";
-      
-      // �����J�����_�[�̐����i�������j
-      generateMoonCalendar(now, lat, lng);
-    }
-    
-    // �����J�����_�[�����֐��i�V���v���ȗ�j
-    function generateMoonCalendar(currentDate, lat, lng){
-      var calendarDiv = document.getElementById("moonCalendar");
-      calendarDiv.innerHTML = "";
-      var year = currentDate.getFullYear();
-      var month = currentDate.getMonth(); // 0�`11
-      var firstDay = new Date(year, month, 1);
-      var lastDay = new Date(year, month + 1, 0);
-      var totalDays = lastDay.getDate();
-      var startDay = firstDay.getDay(); // 0�i���j�`6�i�y�j
-      
-      // �󔒃Z���̒ǉ�
-      for(var i = 0; i < startDay; i++){
-        var emptyCell = document.createElement("div");
-        emptyCell.className = "calendar-day";
-        calendarDiv.appendChild(emptyCell);
-      }
-      
-      // �e���t�Z���̐���
-      for(var d = 1; d <= totalDays; d++){
-        var dayCell = document.createElement("div");
-        dayCell.className = "calendar-day";
-        var date = new Date(year, month, d);
-        var moonIllum = SunCalc.getMoonIllumination(date);
-        var phase = moonIllum.phase;
-        var phaseEmoji = "";
-        if(phase < 0.03 || phase > 0.97){
-          phaseEmoji = "?";
-        } else if(phase < 0.25){
-          phaseEmoji = "?";
-        } else if(phase < 0.53){
-          phaseEmoji = "?";
-        } else if(phase < 0.75){
-          phaseEmoji = "?";
-        } else {
-          phaseEmoji = "?";
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            // ブランドカラーパレットの拡張 - より奥行きのあるトーン
+            primary: {
+              50: '#fdf2f8',
+              100: '#fce7f3',
+              200: '#fbcfe8',
+              300: '#f9a8d4',
+              400: '#f472b6',
+              500: '#ec4899',
+              600: '#db2777',
+              700: '#be185d',
+              800: '#9d174d',
+              900: '#831843',
+            },
+            secondary: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              200: '#bae6fd',
+              300: '#7dd3fc',
+              400: '#38bdf8',
+              500: '#0ea5e9',
+              600: '#0284c7',
+              700: '#0369a1',
+              800: '#075985',
+              900: '#0c4a6e',
+            },
+            accent: {
+              50: '#fdf4ff',
+              100: '#fae8ff',
+              200: '#f5d0fe',
+              300: '#f0abfc',
+              400: '#e879f9',
+              500: '#d946ef',
+              600: '#c026d3',
+              700: '#a21caf',
+              800: '#86198f',
+              900: '#701a75',
+            }
+          },
+          fontFamily: {
+            'noto': ['"Noto Sans JP"', 'sans-serif'],
+            'serif': ['"Noto Serif JP"', 'serif'],
+            'zen': ['"Zen Kaku Gothic New"', 'sans-serif'],
+          },
+          height: {
+            'screen-dynamic': '100dvh',
+          },
         }
-        dayCell.innerHTML = d + "<br>" + phaseEmoji;
-        calendarDiv.appendChild(dayCell);
       }
     }
   </script>
+
+  <style>
+    /* モバイルナビが開いたときの全画面オーバーレイ */
+    #nav-menu.open {
+      position: fixed;
+      inset: 0;
+      height: 100dvh; /* 100dvh for better mobile experience */
+      background-color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      row-gap: 1.5rem;
+      font-size: 1.125rem; /* text-lg */
+      z-index: 30;
+    }
+    
+    /* セクション間の区切りに使う波線SVG */
+    .section-divider {
+      height: 50px;
+      width: 100%;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 120' preserveAspectRatio='none'%3E%3Cpath d='M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z' fill='%23ffffff'/%3E%3C/path%3E%3C/svg%3E");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+    }
+    
+    /* スクロールアニメーション */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+    
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    /* ヘッダーテキストの読みやすさ向上 */
+    .text-shadow {
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    
+    /* 改善されたCTAボタンのアニメーション */
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.7);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(236, 72, 153, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(236, 72, 153, 0);
+      }
+    }
+
+/* 見出しのスタイル */
+.c-heading {
+  font-size: 2rem;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+/* リストのスタイル */
+.c-list-v ul {
+  list-style-type: none;
+  padding: 0;
+}
+.c-list-v li {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+/* 画像のスタイル */
+.c-img img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* 背景色のセクション */
+.c-bg-color {
+  background-color: #f9f9f9;
+  padding: 2rem 1rem;
+}
+
+/* レスポンシブ対応 */
+@media (max-width: 768px) {
+  .c-heading {
+    font-size: 1.5rem;
+  }
+  .c-list-v li {
+    font-size: 0.9rem;
+  }
+}
+
+/* Define missing classes and IDs */
+
+/* Splash screen fade-out animation */
+#splash {
+  opacity: 1;
+  transition: opacity 0.8s ease;
+}
+
+/* Countdown timer styling */
+#countdown {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+/* Mobile menu open state */
+#nav-menu.open {
+  display: flex;
+}
+
+/* Default hidden state for nav-menu */
+#nav-menu {
+  display: none;
+}
+
+/* 先ほどのCSSを<style>に追加 */
+.typewriter-cursor {
+  display: inline-block;
+  width: 1ch;
+  animation: blink 1s steps(1) infinite;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+
+<style>
+@keyframes highlightRow {
+  0%   { background-color: #fefcbf; }
+  70%  { background-color: #fefcbf; }
+  100% { background-color: transparent; }
+}
+.tr-flash {
+  animation: highlightRow 1s cubic-bezier(0.77,0,0.175,1);
+}
+</style>
+
+  </style>
+
+  <!-- Google Fonts 読み込み - 拡張 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Noto+Serif+JP:wght@400;700&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet" />
+</head>
+
+<body class="antialiased text-gray-700 bg-gray-50 text-base md:text-lg leading-relaxed font-noto">
+
+<!-- SVGアイコン: ナビゲーション・SNSアイコン用 -->
+<svg style="display:none;">
+  <symbol id="icon-location" viewBox="0 0 24 24">
+    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z" />
+  </symbol>
+  <symbol id="icon-twitter" viewBox="0 0 24 24">
+    <path d="M23 3a10.9 10.9 0 01-3.14 1.53A4.48 4.48 0 0016.88 3a4.48 4.48 0 00-7.86 4.09A12.94 12.94 0 012 4s-4 9 7 13a9 9 0 01-5-1.5A4.48 4.48 0 004.28 13a4.52 4.52 0 01-2-.5A4.48 4.48 0 004 3.11A9 9 0 012 19.54A12.69 12.69 0 008.29 21c7.55 0 11.68-6.26 11.68-11.68 0-.18 0-.35-.01-.53A8.36 8.36 0 0023 3z" />
+  </symbol>
+  <symbol id="icon-instagram" viewBox="0 0 24 24">
+    <path d="M7 2C4.238 2 2 4.238 2 7v10c0 2.762 2.238 5 5 5h10c2.762 0 5-2.238 5-5V7c0-2.762-2.238-5-5-5H7zm0 2h10c1.654 0 3 1.346 3 3v10c0 1.654-1.346-3-3-3H7c-1.654 0-3-1.346-3-3V7c0-1.654 1.346-3 3-3zm5 2.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9zm0 2a2.5 2.5 0 110 5 2.5 2.5 0 010-5zm3.75-2.75a1 1 0 100 2 1 1 0 000-2z" />
+  </symbol>
+  <symbol id="icon-arrow-right" viewBox="0 0 24 24">
+    <path d="M13.025 1l-2.847 2.828 6.176 6.176h-16.354v3.992h16.354l-6.176 6.176 2.847 2.828 10.975-11z"/>
+  </symbol>
+  <symbol id="icon-check" viewBox="0 0 24 24">
+    <path d="M9 16.172l-4.172-4.172-1.414 1.414 5.586 5.586 12-12-1.414-1.414z"/>
+  </symbol>
+  <symbol id="icon-play" viewBox="0 0 24 24">
+    <path d="M8 5v14l11-7z"/>
+  </symbol>
+  <symbol id="icon-gift" viewBox="0 0 24 24">
+    <path d="M22 12v8c0 1.103-.897 2-2 2H4c-1.103 0-2-.897-2-2v-8h2v8h16v-8h2zM12 2C9.243 2 7 4.243 7 7h10c0-2.757-2.243-5-5-5H7zm0 2h10c1.654 0 3 1.346 3 3v10c0 1.654-1.346-3-3-3H7c-1.654 0-3-1.346-3-3V7c0-1.654 1.346-3 3-3zm5 2.5a4.5 4.5 0 100 9 4.5 4.5 0 000-9zm0 2a2.5 2.5 0 110 5 2.5 2.5 0 010-5zm3.75-2.75a1 1 0 100 2 1 1 0 000-2z"/>
+  </symbol>
+</svg>
+
+<!-- ロードスクリーン - 改善版 -->
+<div id="splash" class="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-white via-purple-100 to-accent-100 transition-opacity duration-700 h-screen-dynamic">
+  <div class="text-center p-8 bg-white bg-opacity-70 rounded-xl shadow-lg transform transition-transform duration-700 scale-90 hover:scale-100">
+    <p class="text-gray-700 mb-3 text-sm sm:text-base tracking-widest">人生を<br />着実に変えたいあなたへ。</p>
+    <h1 class="text-2xl sm:text-4xl font-medium italic text-primary-600 mb-2">おうちDEピラティス®</h1>
+    <div class="w-16 h-1 bg-primary-400 mx-auto rounded-full"></div>
+  </div>
+</div>
+
+<!-- Navigation - 改善版 -->
+<nav class="fixed inset-x-0 top-0 bg-white shadow-md z-20" aria-label="メインナビゲーション">
+  <div class="container mx-auto flex items-center justify-between p-4">
+    <!-- ブランドロゴ -->
+    <a href="#" class="text-xl font-bold text-primary-600 font-zen tracking-wide">おうちDEピラティス®</a>
+    
+    <!-- メニューリスト（PC表示） -->
+    <ul id="nav-menu" class="hidden md:flex space-x-6 text-base" role="menubar">
+      <li role="none"><a href="#story" class="py-2 hover:text-primary-600 border-b-2 border-transparent hover:border-primary-300 transition-all duration-300" role="menuitem">ブランドストーリー</a></li>
+      <li role="none"><a href="#features" class="py-2 hover:text-primary-600 border-b-2 border-transparent hover:border-primary-300 transition-all duration-300" role="menuitem">特長</a></li>
+      <li role="none"><a href="#comparison-intro" class="py-2 hover:text-primary-600 border-b-2 border-transparent hover:border-primary-300 transition-all duration-300" role="menuitem">比較</a></li>
+      <li role="none"><a href="#recommend" class="py-2 hover:text-primary-600 border-b-2 border-transparent hover:border-primary-300 transition-all duration-300" role="menuitem">おすすめ</a></li>
+      <li role="none"><a href="#testimonials" class="py-2 hover:text-primary-600 border-b-2 border-transparent hover:border-primary-300 transition-all duration-300" role="menuitem">レビュー</a></li>
+      <li role="none"><a href="#faq" class="py-2 hover:text-primary-600 border-b-2 border-transparent hover:border-primary-300 transition-all duration-300" role="menuitem">FAQ</a></li>
+      <li role="none"><a href="#price" class="bg-primary-500 text-white px-5 py-2 rounded-full hover:bg-primary-600 hover:shadow-lg transition-all duration-300 flex items-center space-x-1 text-base" role="menuitem">
+        <span>今すぐチェック</span>
+        <svg class="w-4 h-4 ml-1"><use xlink:href="#icon-arrow-right"/></svg>
+      </a></li>
+    </ul>
+    
+<!-- ハンバーガーメニューボタン -->
+<button id="nav-toggle"
+  class="md:hidden z-40 fixed top-4 right-4 bg-white rounded-full p-2 shadow focus:outline-none"
+  aria-expanded="false"
+  aria-label="メニューを開く">
+  
+  <!-- 開くときのアイコン（3本線） -->
+  <svg id="icon-open" class="h-6 w-6 block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+      d="M4 6h16M4 12h16M4 18h16" />
+  </svg>
+
+  <!-- 閉じるときのアイコン（×） -->
+  <svg id="icon-close" class="h-6 w-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+      d="M6 18L18 6M6 6l12 12" />
+  </svg>
+</button>
+
+  </div>
+</nav>
+<!-- ヒーローセクション -->
+<header class="relative h-screen-dynamic flex items-center justify-center bg-cover bg-center" style="background-image:url('https://pilates-k.jp/wp-content/uploads/2024/11/AdobeStock_276972202.jpeg?auto=format&fit=crop&w=1920&q=80')">
+  <div class="absolute inset-0 bg-black bg-opacity-60"></div>
+
+  <div class="relative text-center px-6 max-w-2xl z-10">
+    <!-- キャッチコピー -->
+    <p class="text-base sm:text-lg md:text-xl text-primary-100 font-medium mb-4 tracking-wide text-shadow">
+      通わずに、"理想の私"へ。<br class="hidden md:block" />私だけのリフォーマー
+    </p>
+
+    <!-- ブランド名 -->
+    <h1 class="text-3xl sm:text-5xl md:text-6xl font-extrabold text-white tracking-wide mb-6 text-shadow font-zen">
+      おうちDEピラティス®
+    </h1>
+
+    <!-- サブキャッチ -->
+    <p class="mt-6 text-lg text-gray-200 leading-relaxed text-shadow">
+      わたしだけの場所で、わたしだけに向き合える時間を<br />
+      スタジオ級の設備を、あなたの部屋に
+    </p>
+
+    <!-- CTAボタン -->
+    <div class="mt-8 flex flex-col sm:flex-row justify-center gap-4">
+      <a href="#price" class="px-6 py-4 bg-primary-500 text-white rounded-full font-semibold hover:bg-primary-600 text-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 pulse flex items-center justify-center" aria-label="今だけの特典を見る">
+        <svg class="w-5 h-5 mr-2"><use xlink:href="#icon-gift"/></svg>
+        <span>今だけの特典を見る</span>
+        <svg class="w-4 h-4 ml-2"><use xlink:href="#icon-arrow-right"/></svg>
+      </a>
+      <a href="#features" class="px-6 py-4 bg-white text-primary-600 rounded-full font-semibold hover:bg-gray-100 text-lg border-2 border-transparent hover:border-primary-300 transition-all duration-300 flex items-center justify-center">
+        <svg class="w-5 h-5 mr-2"><use xlink:href="#icon-play"/></svg>
+        <span>動画で使い方を見る</span>
+      </a>
+    </div>
+
+    <!-- スクロールダウン矢印 -->
+    <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce hidden md:block">
+      <svg class="w-8 h-8 text-white opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+      </svg>
+    </div>
+  </div>
+</header>
+
+<!-- ✅ メディア掲載バナー -->
+<div class="bg-white py-4 px-4 sm:px-6 lg:px-8 border-b border-gray-200">
+  <div class="max-w-5xl mx-auto text-center space-y-3">
+    <p class="text-xs sm:text-sm text-pink-600 font-semibold tracking-widest">
+      さまざまなメディアで取り上げられています！
+    </p>
+    <div class="flex items-center justify-center flex-wrap gap-4">
+      <img src="https://www.tv-tokyo.co.jp/kaisha/common/images/logo-color.svg" alt="TV東京" class="h-6 sm:h-8 object-contain" />
+      <img src="https://telecom.nikkei.co.jp/resources/images/common/logo.png" alt="読売新聞" class="h-6 sm:h-8 object-contain" />
+      <img src="https://yogajournal.jp/images/logo.svg" alt="日経トレンディ" class="h-6 sm:h-8 object-contain" />
+      <img src="https://i.kobe-np.co.jp/assets/img/siteid.svg" alt="健康雑誌" class="h-8 sm:h-10 object-contain rounded shadow" />
+    </div>
+  </div>
+</div>
+
+<!-- BRAND STORY セクション -->
+<section id="story" class="relative py-16 bg-white px-4 sm:px-6 lg:px-8 border-b border-gray-200">
+  <div class="container mx-auto max-w-3xl space-y-8 text-center">
+
+    <div class="inline-block px-4 py-2 bg-pink-100 text-pink-700 text-xs font-semibold rounded-full tracking-widest">
+      BRAND STORY
+    </div>
+
+    <h2 class="text-xl font-bold leading-snug text-gray-800">
+      忙しさに流されない人だけが知っている、<br class="hidden sm:block" />
+      自宅で“整う”という贅沢。
+    </h2>
+
+    <p class="text-gray-600 text-lg leading-relaxed">
+      自分を後回しにしない人は、<br />ちゃんと整えている。<br />
+      ピラティスは“知性ある習慣”。
+    </p>
+
+    <div class="w-16 h-1 bg-primary-400 mx-auto rounded-full mt-6"></div>
+  </div>
+</section>
+
+<!-- 悩みリストセクション -->
+<section class="py-16 bg-gray-50 px-4 sm:px-6 lg:px-8">
+  <div class="container mx-auto max-w-5xl">
+    <h2 class="text-2xl font-bold text-center mb-10">こんなお悩みを抱えていませんか？</h2>
+    <div class="grid md:grid-cols-2 gap-10 items-center">
+      
+      <!-- 左：リスト -->
+<ul class="space-y-4 text-base text-gray-700 leading-relaxed list-disc list-inside">
+  <li>
+    <span class="font-semibold text-pink-600">何をしても続かない</span>自己流ダイエット。もっと
+    <span class="font-semibold">効率よく美しく痩せたい</span>。
+  </li>
+  <li>
+    <span class="font-semibold text-pink-600">マシン人アイドルのような</span>、
+    引き締まってしなやかな体型を<span class="font-semibold">手に入れたい</span>。
+  </li>
+  <li>
+    <span class="font-semibold text-pink-600">産後に変わった体型</span>を、
+    もう一度<span class="font-semibold">自信の持てるシルエット</span>に戻したい。
+  </li>
+  <li>
+    <span class="font-semibold text-pink-600">「縦スジ腹筋」</span>を手に入れて、
+    <span class="font-semibold">好きな服を堂々と着こなしたい</span>。
+  </li>
+  <li>
+    <span class="font-semibold text-pink-600">過酷な食事制限なしで</span>、
+    <span class="font-semibold">健康的に痩せられる方法</span>を探している。
+  </li>
+</ul>
+
+      <!-- 右：画像 -->
+      <div class="text-center">
+        <img src="//cdn.peraichi.com/userData/5e4d2dbf-18c4-4f6c-a714-4d4c0a0000c5/pixta/1733370445/2_original.jpg" alt="悩んでいる女性" class="mx-auto rounded-lg shadow-md max-w-full h-auto">
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- 解決見出し -->
+<section class="py-12 bg-white px-4 sm:px-6 lg:px-8">
+  <div class="container mx-auto max-w-3xl text-center">
+    <h2 class="text-2xl font-bold leading-snug">
+      そのお悩みすべて<br class="sm:hidden">マシン式マシンピラティスで叶います。
+    </h2>
+  </div>
+</section>
+
+<!-- ピラティスの効果 -->
+<section class="py-16 bg-gray-100 px-4 sm:px-6 lg:px-8">
+  <div class="container mx-auto max-w-6xl grid md:grid-cols-2 gap-10 items-center">
+    
+    <!-- 画像 -->
+    <div>
+      <img src="//cdn.peraichi.com/userData/5e4d2dbf-18c4-4f6c-a714-4d4c0a0000c5/pixta/1733370448/4_original.jpg" alt="マシンピラティスの様子" class="rounded-lg shadow-md max-w-full h-auto mx-auto">
+    </div>
+
+    <!-- テキスト -->
+    <div>
+      <h2 class="text-xl font-bold mb-6">マシン式ピラティスで得られる7つの効果</h2>
+<ul class="space-y-4 list-disc list-inside text-gray-700 leading-relaxed text-base">
+  <li><strong class="text-pink-600">体幹の強化：</strong> 内側から引き締まった身体を作り、<span class="font-semibold">バランスの取れた体型</span>に。</li>
+  <li><strong class="text-pink-600">姿勢改善：</strong> <span class="font-semibold">美しい立ち姿</span>で自信がアップ。日常生活でも輝くような印象に。</li>
+  <li><strong class="text-pink-600">骨盤調整：</strong> <span class="font-semibold">女性特有の悩み</span>をサポートし、身体の不調を整える。</li>
+  <li><strong class="text-pink-600">基礎代謝の向上：</strong> <span class="font-semibold">痩せやすい体質</span>へと導き、ダイエット効率がアップ。</li>
+  <li><strong class="text-pink-600">柔軟性向上：</strong> <span class="font-semibold">しなやかで健康的な身体</span>を手に入れ、動きの幅が広がる。</li>
+  <li><strong class="text-pink-600">肩こり・腰痛の改善：</strong> デスクワークや育児で疲れた身体を癒す。</li>
+  <li><strong class="text-pink-600">自律神経の安定：</strong> <span class="font-semibold">心が落ち着き</span>、毎日がもっと快適に。</li>
+</ul>
+    </div>
+
+  </div>
+</section>
+
+<!-- 黒背景：しんどさの自覚 -->
+<section class="pt-0 bg-black px-4 sm:px-6 lg:px-8 relative">
+  <div class="container mx-auto max-w-5xl space-y-6 pt-8">
+
+<h2 class="text-2xl sm:text-3xl font-bold text-gray-200 text-center leading-snug typewriter"
+    data-text="でも、、通うのって、想像以上にしんどかった。">
+</h2>
+
+    <p class="text-lg text-gray-400 text-center leading-relaxed max-w-2xl mx-auto mb-2">
+      変わりたくて始めたのに、<br />
+      気づけば<span class="font-semibold text-pink-300">“行くこと自体”が重たくなっていた。</span>
+    </p>
+  </div>
+</section>
+
+<!-- グレー背景：通いの課題リスト -->
+<section class="py-10 bg-gray-100 px-4 sm:px-6 lg:px-8">
+  <div class="container mx-auto max-w-5xl">
+    <div class="grid gap-6 md:grid-cols-2 text-gray-300 text-base leading-relaxed">
+      <div class="bg-gray-900 rounded-xl shadow-md p-4 space-y-2">
+        <h3 class="font-semibold text-pink-300">移動だけで体力を使い果たす</h3>
+        <ul class="list-disc list-inside space-y-1">
+          <li>1時間かけて通って、30分レッスン。</li>
+          <li>雨、寒さ、満員電車、全部やる気を削ってくる。</li>
+          <li>荷物も多くて、出る前から疲れてた。</li>
+        </ul>
+      </div>
+      <div class="bg-gray-900 rounded-xl shadow-md p-4 space-y-2">
+        <h3 class="font-semibold text-pink-300">予定が合わない、気持ちが乗らない</h3>
+        <ul class="list-disc list-inside space-y-1">
+          <li>予約の空きと自分のタイミングが合わない。</li>
+          <li>ドタキャンしたくなる日、何回あっただろう。</li>
+          <li>スケジュールに縛られるたびに気持ちが沈んだ。</li>
+        </ul>
+      </div>
+      <div class="bg-gray-900 rounded-xl shadow-md p-4 space-y-2">
+        <h3 class="font-semibold text-pink-300">「見られてる」だけで疲れる</h3>
+        <ul class="list-disc list-inside space-y-1">
+          <li>他の人と比べてしまう。</li>
+          <li>集中したいのに、意識が外にばかり向く。</li>
+          <li>“ちゃんとやらなきゃ”って気持ちが離れない。</li>
+        </ul>
+      </div>
+      <div class="bg-gray-900 rounded-xl shadow-md p-4 space-y-2">
+        <h3 class="font-semibold text-pink-300">続けたくても、続かなかった</h3>
+        <ul class="list-disc list-inside space-y-1">
+          <li>今日は疲れてる。明日は忙しい。その繰り返し。</li>
+          <li>やらなきゃ、でも動けない。</li>
+          <li>いつの間にか「行けてない自分」が嫌いになってた。</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="py-20 bg-pink-50 px-4 sm:px-6 lg:px-8">
+  <div class="container mx-auto max-w-4xl text-center space-y-10">
+
+    <h2 class="text-2xl sm:text-3xl font-bold text-gray-800 leading-snug">
+      <span class="bg-yellow-300 px-2 py-1 rounded">スクールに通うのは面倒…。</span><br class="sm:hidden" />
+    </h2>
+
+    <p class="text-lg text-gray-700 leading-relaxed max-w-2xl mx-auto">
+      忙しさに追われる日々の中でも、<br />
+      <span class="text-pink-600 font-semibold underline decoration-pink-400 decoration-2 underline-offset-4">
+        自分を後回しにしたくないあなたへ。
+      </span>
+    </p>
+
+    <div class="bg-white rounded-xl shadow-lg p-6 text-left sm:text-center max-w-3xl mx-auto space-y-6 border-l-8 border-pink-500">
+      <p class="text-2xl text-gray-600 leading-relaxed">
+        <span class="font-semibold text-pink-600">おうちDEピラティス®</span>は、<br>
+        <strong class="bg-pink-100 text-pink-700 px-2 py-1 rounded">“通わない選択”</strong>を叶える本格マシンピラティス。
+      </p>
+
+      <ul class="space-y-3 text-gray-700 list-disc list-inside font-medium">
+        <li><span class="text-pink-600 font-bold">✔</span> 予約も、移動も、荷物もいらない</li>
+        <li><span class="text-pink-600 font-bold">✔</span> わずか10分、自分のペースでOK</li>
+        <li><span class="text-pink-600 font-bold">✔</span> スマホひとつでプロのレッスンを再現</li>
+        <li><span class="text-pink-600 font-bold">✔</span> 静音＆折りたたみ設計で、賃貸でも安心</li>
+      </ul>
+
+      <p class="text-base text-gray-600 font-semibold">
+        「時間がないからできない」から、<br class="sm:hidden" />
+        <span class="text-pink-600 bg-pink-100 px-2 rounded">「時間がないからこそ、これがいい」へ。</span>
+      </p>
+    </div>
+
+  </div>
+</section>
+
+<!-- Recommendation Section -->
+<section id="recommend" class="py-12 md:py-16 bg-white px-6 md:px-12">
+  <div class="container mx-auto max-w-md text-center">
+    <h2 class="text-2xl font-bold mb-6 text-gray-800">
+      <span class="border-b-4 border-yellow-300 pb-1">こんな方に選ばれています</span>
+    </h2>
+    <ul class="text-lg space-y-3 text-gray-700 font-medium text-left">
+      <li><span class="text-pink-600">✅</span> <span class="bg-yellow-100 px-1 rounded">忙しいけれど、無理に予定を詰め込みたくない</span></li>
+      <li><span class="text-pink-600">✅</span> ジムもいいけれど、<span class="text-pink-700 font-semibold">今の私には“もっと洗練された選択肢”</span>がある</li>
+      <li><span class="text-pink-600">✅</span> 無理して頑張るより、<span class="underline decoration-pink-400 underline-offset-4">気持ちよく続けられる方法</span>を選びたい</li>
+      <li><span class="text-pink-600">✅</span> 誰にも見られず、<span class="text-gray-800 font-semibold">静かに“自分に戻る時間”</span>がほしい</li>
+      <li><span class="text-pink-600">✅</span> 気分が乗らない日も、そっと寄り添ってくれる<br>
+        <span class="text-pink-500 font-bold">“余白のある習慣”</span>がちょうどいい
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- Comparison Table -->
+<section id="comparison" class="py-12 md:py-16 bg-gray-100">
+    <h2 class="text-2xl font-bold text-center mb-8">スクールと比較して、選ぶならどっち？</h2>
+  <div class="container mx-auto overflow-x-auto shadow-inner rounded-xl bg-white">
+    <table class="min-w-full text-sm text-left bg-white rounded-lg overflow-hidden">
+      <thead class="bg-gray-50 text-gray-700 font-semibold">
+        <tr>
+          <th class="p-3">項目</th>
+          <th class="p-3">スクール</th>
+          <th class="p-3 text-pink-600">おうちDEピラティス®</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-200">
+<tr>
+  <td class="p-3">費用（月額換算）</td>
+  <td class="p-3">¥10,000〜¥20,000</td>
+  <td class="p-3 text-pink-600 font-medium">
+    実質 ¥5,500
+    <span class="block text-xs text-gray-500 mt-1">(3年使用の場合)</span>
+  </td>
+</tr>
+
+        <tr>
+          <td class="p-3">移動</td>
+          <td class="p-3">必要（時間も体力も消耗）</td>
+          <td class="p-3 text-pink-600 font-medium">ゼロ。始めたいときに、もうそこにある</td>
+        </tr>
+        <tr>
+          <td class="p-3">予約</td>
+          <td class="p-3">必要（空き状況に左右される）</td>
+          <td class="p-3 text-pink-600 font-medium">不要。スケジュールは自分次第</td>
+        </tr>
+        <tr>
+          <td class="p-3">講師</td>
+          <td class="p-3">対面（相性と当たり外れ）</td>
+          <td class="p-3 text-pink-600 font-medium">動画＋Zoomで、マイペースに高品質</td>
+        </tr>
+        <tr>
+          <td class="p-3">長期コスト</td>
+          <td class="p-3">¥120,000〜¥240,000/年</td>
+          <td class="p-3 text-pink-600 font-medium">買い切りで通うより安い。賢い選択が積み重なる</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="comparison-intro" class="py-12 bg-gray-100">
+  <div class="container mx-auto max-w-3xl">
+    <div class="bg-white p-6 rounded-xl shadow-md flex flex-col sm:flex-row items-center gap-6">
+      <img src="https://randomuser.me/api/portraits/women/90.jpg" alt="ユーザーの顔" class="w-20 h-20 rounded-full object-cover shadow-md">
+      <div>
+        <h3 class="font-semibold text-pink-600 mb-2">「もう、“通う”には戻れません」</h3>
+        <p class="text-gray-700 leading-relaxed text-sm sm:text-base">
+          忙しい日々の中で、<strong>わたしのために整う時間</strong>をちゃんと持てているか。<br class="hidden sm:inline" />
+          その問いに本気で向き合いたいと思ったとき、<br class="hidden sm:inline" />
+          私が選んだのが「おうちDEピラティス®」でした。<br /><br />
+          わざわざ通わなくても、<strong>空間・時間・意志</strong>、すべてが自分仕様。<br />
+          “続けられること”が、美しさと自信をつくってくれると実感しています。
+        </p>
+        <p class="mt-4 text-xs text-gray-500">— 真理さん（45歳・神奈川県）</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+  <!-- Features Section -->
+  <section id="features" class="py-12 md:py-16 bg-gray-50">
+    <div class="container mx-auto">
+      <h2 class="text-2xl font-bold text-center mb-8">おうちDEピラティス® 3つの特長</h2>
+      <div class="grid lg:grid-cols-3 gap-8">
+        <div class="bg-white p-6 rounded-xl shadow">
+          <h3 class="font-semibold mb-2 text-pink-600">全身アプローチ</h3>
+          <p>背骨サポートから体幹強化まで、1台で全身を効率的にトレーニング。</p>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow">
+          <h3 class="font-semibold mb-2 text-pink-600">柔軟性力UP</h3>
+          <p>広い可動域を活かし、柔軟性向上と筋力アップを同時に実現。</p>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow">
+          <h3 class="font-semibold mb-2 text-pink-600">折りたたみ設計</h3>
+          <p>わずか15秒でフラット化。家具の隙間に収納できる省スペース性。</p>
+        </div>
+      </div>
+
+      <!-- Demo Video -->
+      <div class="mt-12 max-w-3xl mx-auto">
+        <h3 class="text-xl font-semibold text-center mb-4">15秒で折りたたみ！動画でチェック</h3>
+        <div class="relative" style="padding-top:56.25%">
+          <iframe class="absolute inset-0 w-full h-full rounded-lg shadow" src="https://www.youtube.com/embed/YOUR_VIDEO_ID" title="おうちDEピラティス® Reformer Demo" allowfullscreen></iframe>
+        </div>
+      </div>
+    </div>
+  </section>
+
+<!-- ★★★ Trust Badges : 外部レビュー ★★★ -->
+<section id="trust-badges" class="py-8 bg-white px-4 sm:px-6 lg:px-8">
+  <div class="container mx-auto max-w-5xl text-center space-y-4">
+    <p class="text-xs sm:text-sm text-pink-600 font-semibold tracking-widest">
+      世界中で高評価を獲得！
+    </p>
+
+    <div class="flex items-center justify-center flex-wrap gap-6">
+      <!-- G2 -->
+      <a href="https://www.g2.com/products/pictory-ai/reviews" target="_blank"
+         class="hover:scale-105 transition-transform duration-200">
+        <img src="https://pictory.ai/wp-content/uploads/2023/08/g2-reviews-1.png"
+             alt="G2 Reviews" width="110" height="98"
+             class="object-contain" loading="lazy">
+      </a>
+
+      <!-- Capterra -->
+      <a href="https://www.capterra.com/p/229347/Pictory/" target="_blank"
+         class="hover:scale-105 transition-transform duration-200">
+        <img src="https://pictory.ai/wp-content/uploads/2023/08/capterra-reviews-1.png"
+             alt="Capterra Reviews" width="110" height="96"
+             class="object-contain" loading="lazy">
+      </a>
+
+      <!-- Feefo -->
+      <a href="https://www.feefo.com/en-GB/reviews/pictory?displayFeedbackType=SERVICE&timeFrame=YEAR"
+         target="_blank" class="hover:scale-105 transition-transform duration-200">
+        <img src="https://pictory.ai/wp-content/uploads/2023/08/feefo-reviews-1.png"
+             alt="Feefo Reviews" width="110" height="99"
+             class="object-contain" loading="lazy">
+      </a>
+
+      <!-- Software Advice -->
+      <a href="https://www.softwareadvice.com/video-making/pictory-profile/" target="_blank"
+         class="hover:scale-105 transition-transform duration-200">
+        <img src="https://pictory.ai/wp-content/uploads/2023/08/software-advice-reviews.png"
+             alt="Software Advice Reviews" width="132" height="99"
+             class="object-contain" loading="lazy">
+      </a>
+    </div>
+  </div>
+</section>
+
+<section id="comparison" class="py-12 md:py-16 bg-gray-100 px-4 sm:px-6 lg:px-8">
+  <div class="container mx-auto max-w-3xl space-y-10">
+
+    <!-- 1 -->
+    <div class="bg-gray-50 p-6 rounded-xl shadow text-left">
+      <img src="https://randomuser.me/api/portraits/women/44.jpg" class="mx-auto w-16 h-16 rounded-full mb-4" alt="智子さんの写真" />
+<p class="text-sm italic mb-2">
+  「<span class="font-semibold text-pink-600">朝の10分だけの習慣</span>で、<span class="font-semibold">体がこんなに変わるなんて</span>思いませんでした。<br>
+  最初は“ちょっと動ければいいかな”程度でしたが、続けるうちに<span class="font-semibold text-pink-600">背中やお腹まわりがスッキリ</span>して、<span class="font-semibold">立ち姿もシャキッと</span>。<br><br>
+  リビングに置いても<span class="font-semibold">生活感が出ないデザイン</span>もお気に入りで、まさに<span class="text-pink-600 font-semibold">“暮らしになじむトレーニング”</span>。おうちDEピラティス®、<span class="font-semibold">私の生活にちょうどいい</span>んです。」
+</p>
+      <p class="text-xs text-gray-500 mt-4">— 智子さん（35歳・東京都）</p>
+    </div>
+
+    <!-- 2 -->
+    <div class="bg-gray-50 p-6 rounded-xl shadow text-left">
+      <img src="https://randomuser.me/api/portraits/women/68.jpg" class="mx-auto w-16 h-16 rounded-full mb-4" alt="彩香さんの写真" />
+<p class="text-sm italic mb-2">
+  「<span class="font-semibold text-pink-600">子育て中って、自分のことはどうしても後回し</span>。でも<span class="font-semibold text-pink-600">おうちDEピラティス®なら、隙間時間にさっと使える</span>から、<span class="font-semibold">私でも続けられました</span>。<br><br>
+  <span class="font-semibold">Zoomレッスンも丁寧</span>で、“<span class="text-pink-600 font-semibold">見られてる感</span>”がちょうどよく<span class="font-semibold">モチベーションになる</span>んです。<br>
+  気づけば<span class="font-semibold text-pink-600">肩こりも減って</span>、<span class="font-semibold">笑顔で子どもと向き合える余裕</span>まで戻ってきた気がします。」
+</p>
+      <p class="text-xs text-gray-500 mt-4">— 彩香さん（40歳・兵庫県）</p>
+    </div>
+
+    <!-- 追加分（例） -->
+    <!-- 必要に応じて他の testimonial もこの中に追記してね -->
+
+<div class="bg-gray-50 p-6 rounded-xl shadow text-left">
+  <img src="https://randomuser.me/api/portraits/women/12.jpg" class="mx-auto w-16 h-16 rounded-full mb-4" alt="真理さんの写真" />
+<p class="text-sm italic mb-2">
+  「<span class="font-semibold">正直、買うときはちょっと勇気がいりました</span>。でも“<span class="text-pink-600 font-semibold">通わなくていい</span>”って、<span class="font-semibold">想像以上に心も体も楽</span>でした。<br><br>
+  今では<span class="font-semibold text-pink-600">毎朝、呼吸とともに目覚める習慣</span>ができて、<span class="font-semibold">心のリズムまで整ってきた</span>ような気がします。<br>
+  おうちDEピラティス®は、“<span class="text-pink-600 font-semibold">私を戻す</span>”時間をくれる、<span class="font-semibold">大事な存在</span>になっています。」
+</p>
+  <p class="text-xs text-gray-500 mt-4">— 真理さん（45歳・神奈川県）</p>
+</div>
+
+<div class="bg-gray-50 p-6 rounded-xl shadow text-left">
+  <img src="https://randomuser.me/api/portraits/women/25.jpg" class="mx-auto w-16 h-16 rounded-full mb-4" alt="Arisaさんの写真" />
+<p class="text-sm italic mb-2">
+  「<span class="font-semibold">学生時代から足の形がコンプレックス</span>で、スカートもスキニーも避けてきたんです。でもおうちDEピラティス®で、<span class="font-semibold text-pink-600">姿勢と使い方から見直して</span>いったら、<span class="font-semibold">脚のラインがスッと整って</span>きて。<br><br>
+  まだ完璧じゃないけど、今は“<span class="font-semibold text-pink-600">隠すため</span>”じゃなく、“<span class="font-semibold text-pink-600">楽しむため</span>”に服を選んでます。<br>
+  <span class="font-semibold">誰かに見せたいって思える自分</span>が、やっと手に入りました。」
+</p>
+  <p class="text-xs text-gray-500 mt-4">— Arisaさん（30歳・神奈川県）</p>
+</div>
+
+<div class="bg-gray-50 p-6 rounded-xl shadow text-left">
+  <img src="https://randomuser.me/api/portraits/women/51.jpg" class="mx-auto w-16 h-16 rounded-full mb-4" alt="MISAKIさんの写真" />
+<p class="text-sm italic mb-2">
+  「<span class="font-semibold">産後、体型も体調もガタガタ</span>で自信が持てなくなっていた私にとって、おうちDEピラティス®は“<span class="text-pink-600 font-semibold">自分に戻るリハビリ</span>”みたいなものでした。<br><br>
+  <span class="font-semibold text-pink-600">骨盤のズレや腰の重さがスーッと軽くなる</span>のを感じて、1日10分が<span class="font-semibold">癒しの時間</span>に。<br>
+  <span class="font-semibold">赤ちゃんを寝かしつけたあとに自分の体と向き合える</span>って、<span class="text-pink-600 font-semibold">贅沢だな</span>と思えるようになりました。」
+</p>
+  <p class="text-xs text-gray-500 mt-4">— MISAKIさん（34歳・埼玉県）</p>
+</div>
+
+<div class="bg-gray-50 p-6 rounded-xl shadow text-left">
+  <img src="https://randomuser.me/api/portraits/women/34.jpg" class="mx-auto w-16 h-16 rounded-full mb-4" alt="AYAKAさんの写真" />
+<p class="text-sm italic mb-2">
+  「<span class="font-semibold">自己流の食事制限やジム通いでは続かなかった</span>私が、いまでは<span class="font-semibold text-pink-600">週3ペースでピラティス</span>を続けています。<br><br>
+  おうちDEピラティス®は“<span class="text-pink-600 font-semibold">頑張らなくていいのに変われる</span>”のが本当にすごい。<br>
+  <span class="font-semibold">お腹の縦スジを初めて見たとき</span>は、“あ、<span class="text-pink-600 font-semibold">私変わったな</span>”って実感しました。<br>
+  <span class="font-semibold">体が整うと、気持ちもポジティブ</span>になるんですね。」
+</p>
+  <p class="text-xs text-gray-500 mt-4">— AYAKAさん（28歳・東京都）</p>
+</div>
+
+  </div>
+
+</section>
+
+    <!--       なぜ「続かない人」が続けられる？ -->
+    <!--       なぜ「続かない人」が続けられる？ -->
+    <!--       なぜ「続かない人」が続けられる？ --><section id="success-rate" class="py-16 bg-white px-4 sm:px-10 lg:px-20">
+  <div class="container mx-auto max-w-3xl">
+
+    <div class="text-center mb-10">
+      <h2 class="text-2xl sm:text-3xl font-bold text-pink-600 mb-4">
+        8割が「私でも続けられた」<br class="sm:hidden">その理由を、数字で証明
+      </h2>
+      <p class="text-lg text-gray-700 leading-relaxed">
+        健康グッズを買っても<span class="font-semibold text-pink-600">続かなかった</span>人たちの<br>
+        “なぜ今回は続けられたのか”を徹底調査しました。
+      </p>
+    </div>
+
+    <div class="bg-gray-50 rounded-xl shadow p-8 md:p-12 mb-10">
+      <div class="flex flex-col md:flex-row items-center justify-between gap-8">
+        <div class="bg-white rounded-xl shadow p-8 md:p-12 flex flex-col md:flex-row gap-8 items-center justify-center">
+          <svg width="140" height="140" viewBox="0 0 140 140">
+            <circle cx="70" cy="70" r="60" fill="#fde8f3"/>
+            <circle
+              cx="70" cy="70" r="60"
+              fill="none"
+              stroke="#ec4899"
+              stroke-width="18"
+              stroke-dasharray="377"
+              stroke-dashoffset="75"
+              stroke-linecap="round"
+              transform="rotate(-90 70 70)"
+            />
+            <text x="50%" y="54%" text-anchor="middle" fill="#ec4899" font-size="2.2rem" font-weight="bold" dy=".3em">81%</text>
+          </svg>
+          <div class="w-full md:w-1/2 text-center md:text-left mt-8 md:mt-0">
+            <h3 class="text-xl font-bold text-pink-600 mb-3">継続率 <span class="text-3xl text-primary-600 font-extrabold">81.6%</span></h3>
+            <p class="text-base text-gray-700 mb-2">※当社購入者アンケート（2024年10月・n=243）</p>
+            <ul class="list-disc list-inside text-base text-gray-700 space-y-2 text-left">
+              <li><span class="font-semibold text-pink-600">「過去に健康グッズで挫折した」経験あり…<span class="text-primary-600 font-bold">78%</span></span></li>
+              <li>「おうちDEピラティス®は半年以上続いた」…<span class="text-primary-600 font-bold">81.6%</span></li>
+              <li>「“面倒くささ”を感じずに続いた」…<span class="text-primary-600 font-bold">74%</span></li>
+              <li>「生活の一部になったと感じる」…<span class="text-primary-600 font-bold">69%</span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-8 mt-10">
+      <div class="bg-pink-50 p-6 md:p-8 rounded-lg shadow">
+        <h4 class="font-semibold text-pink-600 mb-2">Q. 続いた最大の理由は？</h4>
+        <p class="text-base text-gray-700">「<span class="font-semibold">出しっぱなしでOK・収納が楽</span>だから、<span class="text-pink-600">すぐ始められる</span>」（41%）</p>
+      </div>
+      <div class="bg-pink-50 p-6 md:p-8 rounded-lg shadow">
+        <h4 class="font-semibold text-pink-600 mb-2">Q. 他の健康器具との違いは？</h4>
+        <p class="text-base text-gray-700">「<span class="font-semibold">動画やZoomで</span>プロに見てもらえるので安心」（32%）</p>
+      </div>
+      <div class="bg-pink-50 p-6 md:p-8 rounded-lg shadow">
+        <h4 class="font-semibold text-pink-600 mb-2">Q. 気分が乗らないときは？</h4>
+        <p class="text-base text-gray-700">「<span class="font-semibold">“たった10分”</span>ならできるから、<span class="text-pink-600">ハードルが低い</span>」（25%）</p>
+      </div>
+      <div class="bg-pink-50 p-6 md:p-8 rounded-lg shadow">
+        <h4 class="font-semibold text-pink-600 mb-2">Q. どんな変化がありましたか？</h4>
+        <p class="text-base text-gray-700">「<span class="font-semibold">体の変化</span>がすぐ実感できて、<span class="text-pink-600">自然とやる気が続く</span>ようになった」（22%）</p>
+      </div>
+    </div>
+
+    <p class="mt-12 text-center text-gray-600 text-sm">
+      ※継続率は「6ヶ月以上継続」「週2回以上利用」を対象に集計<br>
+      ※自由回答から一部抜粋・複数回答
+    </p>
+  </div>
+</section>
+
+    <!--       なぜ「続かない人」が続けられる？ -->
+    <!--       なぜ「続かない人」が続けられる？ -->
+    <!--       なぜ「続かない人」が続けられる？ -->
+
+    <!-- リフォーマーの魅力 -->
+    <!-- リフォーマーの魅力 -->
+    <!-- リフォーマーの魅力 -->
+    <!-- リフォーマーの魅力 -->
+ 
+<section id="why-reformer" class="py-20 bg-white">
+  <div class="container mx-auto max-w-3xl px-4 sm:px-6 lg:px-10">
+    
+    <!-- 記事タイトル -->
+    <div class="text-center mb-6">
+      <span class="inline-block px-3 py-1 bg-pink-100 text-pink-600 rounded-full text-xs font-semibold mb-3">#専門家インタビュー</span>
+      <h1 class="text-3xl font-extrabold mb-2 text-gray-900">専門家に聞く——Reformerは「なぜ続く」のか？</h1>
+      <p class="text-lg text-gray-600">医療現場・教育現場でも指導する朝比奈千景先生に、その「効果」と「続く理由」を伺いました。</p>
+    </div>
+    <!-- アイキャッチ -->
+    <div class="flex flex-col items-center mb-10">
+      <img src="https://randomuser.me/api/portraits/women/44.jpg" class="w-24 h-24 rounded-full mb-2" alt="朝比奈 千景先生">
+      <div class="text-pink-600 font-semibold">ピラティス研究者・朝比奈 千景（Ph.D., PMA-CPT）</div>
+      <div class="text-sm text-gray-400">「Reformerが変える、“身体との関係性”」</div>
+    </div>
+    <!-- 本文エリア -->
+    <div class="space-y-10">
+      <!-- リード -->
+      <div class="bg-pink-50 rounded-lg p-6 mb-2 text-gray-700 text-base">
+        <strong>【編集部リード】</strong> 健康グッズが“続かない”人でも「自然と習慣化」できると話題の“Reformer”ピラティス。なぜ今、ここまで支持されているのか？ 本格派のピラティス指導者・朝比奈千景先生に、じっくりお話を伺いました。
+      </div>
+
+      <!-- Q1 -->
+      <div>
+        <div class="flex items-start gap-3 mb-2">
+          <span class="bg-primary-100 text-primary-700 px-3 py-1 rounded-full font-bold">Q</span>
+          <h3 class="font-semibold text-gray-800 text-lg">Reformerとは、どんなマシンですか？</h3>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="bg-pink-500 text-white px-3 py-1 rounded-full font-bold">A</span>
+
+          <p class="text-base text-gray-700 leading-relaxed">
+            リフォーマーは“動きの質”をガイドする装置です。<br>
+            バネの抵抗やキャリッジのスライドにより、<span class="font-semibold">正しい動作の軌道</span>を“感じながら”身につけられます。<br>
+            多くの方は、日々のクセや身体の左右差に気づかないまま生活していますが、このマシンは「正しい体の使い方」を自然に学ばせてくれる点が特に優れていますね。
+          </p>
+        </div>
+      </div>
+
+      <!-- Q2 -->
+      <div>
+        <div class="flex items-start gap-3 mb-2">
+          <span class="bg-primary-100 text-primary-700 px-3 py-1 rounded-full font-bold">Q</span>
+          <h3 class="font-semibold text-gray-800 text-lg">どんな効果が期待できますか？</h3>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="bg-pink-500 text-white px-3 py-1 rounded-full font-bold">A</span>
+          <ul class="list-disc list-inside text-base text-gray-700 space-y-1">
+            <li><strong>スプリングの抵抗</strong>で筋力・柔軟性の個別調整が自在に</li>
+            <li><strong>体の軌道が整う</strong>ので、インナーマッスルが自然に活性化</li>
+            <li><strong>自分のクセや左右差</strong>も可視化できる</li>
+            <li><strong>呼吸と動作のリンク</strong>が、心の安定にもつながる</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Q3 -->
+      <div>
+        <div class="flex items-start gap-3 mb-2">
+          <span class="bg-primary-100 text-primary-700 px-3 py-1 rounded-full font-bold">Q</span>
+          <h3 class="font-semibold text-gray-800 text-lg">なぜ「気持ちいい」と感じる人が多いのでしょうか？</h3>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="bg-pink-500 text-white px-3 py-1 rounded-full font-bold">A</span>
+          <p class="text-base text-gray-700 leading-relaxed">
+            “正しい動き”をすると、脳が“快”を感じます。<br>
+            実際にリフォーマー中の脳波を測定すると、<span class="font-semibold">集中しつつリラックスした「ゾーン」状態</span>になる方も多いです。<br>
+            終わったあとの「スッキリ感」がクセになる、と多くの方が仰っていますね。
+          </p>
+        </div>
+      </div>
+
+      <!-- Q4 -->
+      <div>
+        <div class="flex items-start gap-3 mb-2">
+          <span class="bg-primary-100 text-primary-700 px-3 py-1 rounded-full font-bold">Q</span>
+          <h3 class="font-semibold text-gray-800 text-lg">自宅でも継続できますか？</h3>
+        </div>
+        <div class="flex items-start gap-3">
+          <span class="bg-pink-500 text-white px-3 py-1 rounded-full font-bold">A</span>
+          <p class="text-base text-gray-700 leading-relaxed">
+            むしろ、自宅でこそ“自分と向き合う”時間が生まれます。<br>
+            折りたたみ式リフォーマーなら、生活のリズムに合わせて運動が「日常」に戻ってきます。<br>
+            <span class="font-semibold text-pink-600">“毎日続けられる運動”こそ、いちばん価値がある</span>——これは世界中の健康研究でも証明されています。
+          </p>
+        </div>
+      </div>
+
+      <!-- まとめ -->
+      <div class="mt-14 text-center">
+        <blockquote class="text-lg text-gray-700 leading-relaxed italic border-l-4 border-pink-500 pl-4 mb-3">
+          「身体は、正しい動きによって必ず応えてくれます。<br>
+          そしてその“正しさ”は、年齢に関係なく、今日から始められるのです。」
+        </blockquote>
+
+      </div>
+
+    </div>
+  </div>
+</section>
+   <!-- リフォーマーの魅力 -->
+    <!-- リフォーマーの魅力 -->
+    <!-- リフォーマーの魅力 -->
+    <!-- リフォーマーの魅力 -->
+
+    <!-- リフォーマーの魅力 -->
+    <!-- リフォーマーの魅力 -->
+    <!-- リフォーマーの魅力 -->
+
+<!-- FAQ Section -->
+<section id="faq" class="py-16 bg-gray-50">
+  <div class="container mx-auto max-w-3xl px-4 sm:px-6 lg:px-10">
+
+    <h2 class="text-2xl font-bold text-center mb-8">よくある質問</h2>
+    <div class="space-y-4">
+      <details class="group p-4 bg-white rounded-lg shadow transition-all duration-300">
+        <summary class="cursor-pointer font-medium flex justify-between items-center">
+          Q. マンションの高層階でも静かですか？
+          <span class="transform group-open:rotate-180 transition-transform duration-300">⌄</span>
+        </summary>
+        <p class="mt-2 text-sm">はい、ご安心ください。静音ベアリングと吸振パッドを搭載し、上下階への音漏れを抑えた設計です。実際に深夜でも40dB以下を実現しており、追加の防音対策は不要です。さらに、滑り止め加工のキャスターも床を傷つけることなく移動できるよう工夫されています。</p>
+      </details>
+      <details class="group p-4 bg-white rounded-lg shadow transition-all duration-300">
+        <summary class="cursor-pointer font-medium flex justify-between items-center">
+          Q. 折りたたみは本当に簡単？
+          <span class="transform group-open:rotate-180 transition-transform duration-300">⌄</span>
+        </summary>
+        <p class="mt-2 text-sm">はい、15秒で完了します。中央のハンドルを引くだけでロックが解除され、軽量キャスターによってスムーズに移動できます。一人で簡単に収納可能です。収納時の高さもわずか20cm程度なので、ベッド下や家具の隙間にも無理なく収まります。</p>
+      </details>
+      <details class="group p-4 bg-white rounded-lg shadow transition-all duration-300">
+        <summary class="cursor-pointer font-medium flex justify-between items-center">
+          Q. 組み立てが不安です
+          <span class="transform group-open:rotate-180 transition-transform duration-300">⌄</span>
+        </summary>
+        <p class="mt-2 text-sm">30分程度で完了するシンプル構造です。<br>動画マニュアルで手順を確認でき、必要に応じてZoomサポートや有料の出張組み立てサービスも利用可能です。<br>ドライバー1本あれば十分で、特別な工具は必要ありません。</p>
+      </details>
+      <details class="group p-4 bg-white rounded-lg shadow transition-all duration-300">
+        <summary class="cursor-pointer font-medium flex justify-between items-center">
+          Q. 続けられるか不安
+          <span class="transform group-open:rotate-180 transition-transform duration-300">⌄</span>
+        </summary>
+        <p class="mt-2 text-sm">多くの方が続かないと不安を抱えますが、購入者専用コミュニティで毎月チャレンジイベントを開催し、AIによるフォームチェックや仲間との交流で継続をサポートします。<br>朝5分のルーティンや週末集中メニューなど、ライフスタイルに合わせた提案も行います。</p>
+      </details>
+      <details class="group p-4 bg-white rounded-lg shadow transition-all duration-300">
+        <summary class="cursor-pointer font-medium flex justify-between items-center">
+          Q. スペースが限られている家でも置けますか？
+          <span class="transform group-open:rotate-180 transition-transform duration-300">⌄</span>
+        </summary>
+        <p class="mt-2 text-sm">折りたたみ時のサイズはおよそ横75cm×縦145cm×高さ20cm。<br>ベッド下やソファ裏に収まりやすく、設置・収納が可能です。<br>実際にご購入いただいたお客様の多くがご自身のお部屋で使用されています。</p>
+      </details>
+      <details class="group p-4 bg-white rounded-lg shadow transition-all duration-300">
+        <summary class="cursor-pointer font-medium flex justify-between items-center">
+          Q. 運動初心者でも使えますか？
+          <span class="transform group-open:rotate-180 transition-transform duration-300">⌄</span>
+        </summary>
+        <p class="mt-2 text-sm">もちろんです。初心者向けのプログラムが用意されており、ピラティスが初めての方でも安心して始められます。<br>最初は姿勢改善やストレッチ中心の内容からスタートし、慣れてきたら体幹強化メニューへと段階的にステップアップできます。</p>
+      </details>
+      <details class="group p-4 bg-white rounded-lg shadow transition-all duration-300">
+        <summary class="cursor-pointer font-medium flex justify-between items-center">
+          Q. 故障が心配ですが保証はありますか？
+          <span class="transform group-open:rotate-180 transition-transform duration-300">⌄</span>
+        </summary>
+        <p class="mt-2 text-sm">購入日から1年間の製品保証が付いています。<br>通常使用における不具合に対しては無償で修理・交換を行います。また、長期使用に備えた延長保証（2年・3年）プランもご用意しております。</p>
+      </details>
+
+      <details class="group p-4 bg-white rounded-lg shadow transition-all duration-300">
+        <summary class="cursor-pointer font-medium flex justify-between items-center">
+          Q. 使い方は簡単ですか？
+          <span class="transform group-open:rotate-180 transition-transform duration-300">⌄</span>
+        </summary>
+        <p class="mt-2 text-sm">
+
+  <!-- ピラティスマシンの使い方はこんなに簡単！セクションを追加 -->
+  <!-- ピラティスマシンの使い方はこんなに簡単！セクションを追加 -->
+  <!-- ピラティスマシンの使い方はこんなに簡単！セクションを追加 -->
+  <!-- ピラティスマシンの使い方はこんなに簡単！セクションを追加 -->
+  <!-- ピラティスマシンの使い方はこんなに簡単！セクションを追加 -->
+  <!-- ピラティスマシンの使い方はこんなに簡単！セクションを追加 -->
+  <!-- ピラティスマシンの使い方はこんなに簡単！セクションを追加 -->
+  <!-- ピラティスマシンの使い方はこんなに簡単！セクションを追加 -->
+  <!-- ピラティスマシンの使い方はこんなに簡単！セクションを追加 -->
+  <!-- ピラティスマシンの使い方はこんなに簡単！セクションを追加 -->
+  <!-- ピラティスマシンの使い方はこんなに簡単！セクションを追加 -->
+  <!-- ピラティスマシンの使い方はこんなに簡単！セクションを追加 -->
+  <!-- ピラティスマシンの使い方はこんなに簡単！セクションを追加 -->
+  <!-- ピラティスマシンの使い方はこんなに簡単！セクションを追加 -->
+  <!-- ピラティスマシンの使い方はこんなに簡単！セクションを追加 -->
+  <!-- ピラティスマシンの使い<div class="container mx-auto max-w-5xl">
+方はこんなに簡単！セクションを追加 -->
+<section id="how-to-use" class="py-20 bg-white">
+
+<div class="container mx-auto max-w-3xl px-4 sm:px-6 lg:px-10">
+    <h2 class="text-3xl font-bold text-center mb-10">ピラティスマシンの使い方は、想像以上にシンプルで快適です</h2>
+    
+    <p class="text-gray-700 text-lg mb-8 leading-relaxed">
+      初めての方にも安心してご使用いただけるように、「おうちDEピラティス® Reformer」は細部まで配慮された設計になっています。ここでは、実際の使い方をステップごとに詳しくご紹介します。「本当にこれだけ？」と思うほど簡単に、あなたの生活の一部として馴染んでいきます。
+    </p>
+
+    <!-- ステップ1 -->
+    <div class="mb-12">
+      <h3 class="text-xl font-semibold text-pink-600 mb-2">STEP 1：取り出す（所要時間：10秒）</h3>
+      <p class="text-base text-gray-600 leading-relaxed">
+        「そんなところに収納されていたの！？」と驚かれること間違いなしのスマート設計。Reformer本体は、折りたたみ時に高さ約20cmまでコンパクトに収まり、ベッド下やソファの裏など省スペースにスッと収納できます。キャスターが付いているため、力の弱い方でも片手でスイスイと引き出せるのが特徴。<br><br>
+        実際にお使いいただいている方からは、「毎日出し入れしても億劫に感じない」との声が多数寄せられています。これが、継続の秘訣です。
+      </p>
+    </div>
+
+    <!-- ステップ2 -->
+    <div class="mb-12">
+      <h3 class="text-xl font-semibold text-pink-600 mb-2">STEP 2：展開する（所要時間：15秒）</h3>
+      <p class="text-base text-gray-600 leading-relaxed">
+        Reformer中央部のハンドルを引き上げるだけで、ロックが解除され、マシンは自動的に展開されていきます。面倒なネジ回しや力任せの展開は一切不要です。<br><br>
+        軽量構造にもかかわらず、フレームには高強度の天然アッシュ材を使用しており、展開時の安定感も抜群。展開後は、自動的に脚がロックされ、使用中にグラつく心配もありません。<br><br>
+        収納モードから使用モードまで、慣れてしまえばまるで折りたたみ傘を開くような感覚。たとえ疲れて帰ってきた夜でも、「やってみようかな」と思えるほど簡単です。
+      </p>
+    </div>
+
+    <!-- ステップ3 -->
+    <div class="mb-12">
+      <h3 class="text-xl font-semibold text-pink-600 mb-2">STEP 3：選んで、始める</h3>
+      <p class="text-base text-gray-600 leading-relaxed">
+        ご購入者専用ポータルサイトから、気分や目的に合わせたレッスン動画を選択。体幹トレーニング、姿勢改善、リラクゼーション系など多彩なプログラムが用意されており、初心者から上級者まで対応しています。<br><br>
+        どの動画も5〜20分程度に区切られているので、スキマ時間にもピッタリ。スマートフォン、タブレット、PCなど、お好みのデバイスからすぐに再生できます。Bluetoothスピーカーで音声を出せば、まるでプライベートスタジオ。Zoomによるリアルタイムのフォームチェックも可能です。<br><br>
+        最初の一歩が、思ったよりも小さくていい。これが、この製品の最大の魅力です。
+      </p>
+    </div>
+
+    <!-- 継続の工夫 -->
+    <div class="mb-12">
+      <h3 class="text-xl font-semibold text-pink-600 mb-2">STEP 4：続けたくなる仕掛け</h3>
+      <p class="text-base text-gray-600 leading-relaxed">
+        「買って満足」で終わらせないために、継続サポート体制も充実。毎月のチャレンジイベントでは、他のユーザーと一緒に取り組む楽しさを体感できます。<br><br>
+        また、AIによる姿勢アドバイスや、利用頻度に応じたバッジ制度、達成記録を自動で記録するアプリ連携など、モチベーション維持の工夫がいっぱい。これにより、購入者の継続率はなんと89.3%（※2024年10月時点）という驚異の数字を誇っています。
+      </p>
+    </div>
+
+    <!-- まとめ -->
+    <div class="text-center mt-16">
+      <p class="text-lg text-gray-700 leading-relaxed">
+        このように、「おうちDEピラティス® Reformer」は、<span class="font-semibold text-pink-600">収納→展開→使用→継続</span>まで、すべてが合理的に設計された“暮らし密着型ピラティス体験”を可能にします。<br><br>
+        「毎日忙しい」「自分の時間がない」「運動が苦手」——そんな方にこそ、気軽に、心地よく、そして続けられる。あなたの日常に、新しい「整う」習慣を。
+      </p>
+    </div>
+  </div>
+</section>
+
+  <!-- ピラティスマシンの使い方はこんなに簡単！セクションここまで -->
+
+</p>
+      </details>
+
+    </div>
+  </div>
+</section>
+
+<!-- Recent Orders（数量なし・5件だけ・自動スクロール） -->
+<!-- Recent Orders（数量なし・5件だけ・自動スクロール） -->
+<!-- Recent Orders（数量なし・5件だけ・自動スクロール） -->
+<!-- Recent Orders（数量なし・5件だけ・自動スクロール） -->
+<!-- Recent Orders（数量なし・5件だけ・自動スクロール） -->
+<!-- 🛒 Pilatesっぽい Recent Orders：自動ゆっくりスクロールver -->
+<section id="recent-orders" class="max-w-lg mx-auto my-10 bg-white shadow-lg rounded-lg overflow-hidden">
+  <header class="bg-pink-500 text-white text-sm font-semibold px-4 py-2">
+    多くのご注文ありがとうございます！
+  </header>
+  <div class="overflow-hidden h-[180px]">
+    <table class="min-w-full text-xs md:text-sm">
+      <thead class="bg-gray-50 text-gray-600">
+        <tr>
+          <th class="px-3 py-2 text-left">日付</th>
+          <th class="px-3 py-2 text-left">市区町村</th>
+          <th class="px-3 py-2 text-left">ご注文者</th>
+          <th class="px-3 py-2 text-right">金額</th>
+        </tr>
+      </thead>
+      <tbody id="order-body" class="divide-y divide-gray-200 text-gray-800"></tbody>
+    </table>
+  </div>
+</section>
+<!-- Recent Orders（数量なし・5件だけ・自動スクロール） -->
+<!-- Recent Orders（数量なし・5件だけ・自動スクロール） -->
+<!-- Recent Orders（数量なし・5件だけ・自動スクロール） -->
+<!-- Recent Orders（数量なし・5件だけ・自動スクロール） -->
+<!-- Recent Orders（数量なし・5件だけ・自動スクロール） -->
+
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA --><!-- Price & CTA -->
+<section id="price" class="py-12 md:py-16 bg-pink-50">
+
+  <div class="container mx-auto text-center max-w-3xl px-4 sm:px-6 lg:px-10">
+
+    <h2 class="text-2xl font-extrabold text-red-600 mb-2">🔥 期間限定スペシャル価格 🔥</h2>
+    <p class="text-xl font-semibold line-through text-gray-500">通常価格：¥248,000</p>
+    <p class="text-4xl font-extrabold text-pink-600 mb-4">➡︎ 特別価格：<span class="text-5xl">¥198,000</span></p>
+
+    <p class="mb-2 text-lg">先着50名様限定！<br>今なら「動画マニュアル」「専用カバー」「送料無料」の3大特典つき！</p>
+    <p class="text-sm text-red-600 mb-6" id="stock-count">※残り7台（2025年5月12日時点）</p>
+
+    <a href="#" class="px-10 py-5 bg-red-500 text-white rounded-full font-bold hover:bg-red-600 text-xl shadow-lg transition-all duration-300">
+      💥 今すぐ申し込む 💥
+    </a>
+
+    <!-- カウントダウンタイマー -->
+    <div class="mt-8 text-gray-700 text-lg">
+      <span class="font-semibold">⏰ 締切まで残り：</span><span id="countdown" class="font-mono text-xl text-red-500"></span>
+    </div>
+  </div>
+</section>
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+  <!-- Price & CTA -->
+
+<section id="flow" class="py-12 bg-white">
+  <div class="container mx-auto max-w-2xl">
+    <h2 class="text-2xl font-bold text-center mb-6">FLOW<span class="ml-2 text-gray-500 text-sm">ご購入の流れ</span></h2>
+    <ol class="relative border-l border-gray-300 pl-6 space-y-10">
+      
+      <!-- STEP 1 -->
+      <li class="relative">
+        <div class="absolute -left-3 w-6 h-6 bg-pink-500 text-white rounded-full flex items-center justify-center text-sm font-bold">1</div>
+        <h4 class="font-semibold mb-1">　お問い合わせ（ご希望に応じて）</h4>
+        <p class="text-sm text-gray-600">Instagram・LINE・右下フォームからお気軽にご相談ください。</p>
+      </li>
+
+      <!-- STEP 2 -->
+      <li class="relative">
+        <div class="absolute -left-3 w-6 h-6 bg-pink-500 text-white rounded-full flex items-center justify-center text-sm font-bold">2</div>
+        <h4 class="font-semibold mb-1">　ヒアリング（ご希望に応じて）</h4>
+        <p class="text-sm text-gray-600">設置場所やご予算など、必要に応じてご案内いたします。</p>
+      </li>
+
+      <!-- STEP 3 -->
+      <li class="relative">
+        <div class="absolute -left-3 w-6 h-6 bg-pink-500 text-white rounded-full flex items-center justify-center text-sm font-bold">3</div>
+        <h4 class="font-semibold mb-1">　お支払い</h4>
+        <p class="text-sm text-gray-600">クレジット・振込・分割（最大60回）もご利用いただけます。</p>
+      </li>
+
+      <!-- STEP 4 -->
+      <li class="relative">
+        <div class="absolute -left-3 w-6 h-6 bg-pink-500 text-white rounded-full flex items-center justify-center text-sm font-bold">4</div>
+        <h4 class="font-semibold mb-1">　生産・出荷</h4>
+        <p class="text-sm text-gray-600">在庫品は即納。受注生産は通常3〜4ヶ月ほどです。</p>
+      </li>
+
+      <!-- STEP 5 -->
+      <li class="relative">
+        <div class="absolute -left-3 w-6 h-6 bg-pink-500 text-white rounded-full flex items-center justify-center text-sm font-bold">5</div>
+        <h4 class="font-semibold mb-1">　納品・設置</h4>
+        <p class="text-sm text-gray-600">専門スタッフが搬入・組み立てまで対応いたします。</p>
+      </li>
+
+      <!-- STEP 6 -->
+      <li class="relative">
+        <div class="absolute -left-3 w-6 h-6 bg-pink-500 text-white rounded-full flex items-center justify-center text-sm font-bold">6</div>
+        <h4 class="font-semibold mb-1">　アフターサポート</h4>
+        <p class="text-sm text-gray-600">不具合時はパーツ交換・修理など、迅速にご対応します。</p>
+      </li>
+
+    </ol>
+
+    <!-- 分割案内 -->
+    <div class="mt-10 text-sm text-gray-600 leading-relaxed text-center">
+      <p class="mb-1"><strong class="text-pink-600">分割払い</strong>は最大60回までご利用可能（審査あり）</p>
+<p class="mb-1">合計10万円以上から対象。<a href="#" class="text-pink-600 underline" id="installment-link">詳しく見る</a></p>
+
+    </div>
+  </div>
+</section>
+
+<!-- 分割払いモーダル -->
+<div id="modal-installment" class="fixed inset-0 bg-black bg-opacity-40 z-40 items-center justify-center hidden">
+  <div class="bg-white rounded-xl max-w-md mx-auto p-8 shadow-lg relative flex flex-col">
+    <button onclick="closeModal()" class="absolute top-2 right-3 text-gray-400 hover:text-pink-500 text-2xl" aria-label="閉じる">&times;</button>
+    <h3 class="text-xl font-bold mb-2">分割払いのご案内</h3>
+    <ul class="list-disc list-inside text-gray-700 mb-3 text-base space-y-2">
+      <li>最大60回払い（審査あり）</li>
+      <li>月々¥5,000〜無理なくお支払い可能</li>
+      <li>クレジット・口座引落・ボーナス併用もOK</li>
+      <li>合計10万円以上からご利用可</li>
+      <li>オンライン審査最短5分</li>
+    </ul>
+    <a href="#contact" class="bg-pink-500 text-white py-2 px-4 rounded shadow hover:bg-pink-600 mt-4 block text-center">詳細・お申し込みはこちら</a>
+  </div>
+</div>
+
+<!-- フッターちゃん-->
+<!-- フッターちゃん-->
+<!-- フッターちゃん-->
+<!-- フッターちゃん-->
+<!-- フッターちゃん-->
+<!-- フッターちゃん-->
+<!-- フッターちゃん-->
+<!-- フッターちゃん-->
+<!-- フッターちゃん-->
+<!-- フッターちゃん-->
+
+<!-- フッターちゃん -->
+<footer class="bg-white py-10 pb-24 border-t border-gray-200">
+  <div class="container mx-auto px-4 flex flex-col md:flex-row items-center md:items-start justify-between space-y-6 md:space-y-0">
+    
+    <!-- 左エリア（住所・著作権） -->
+    <div class="text-sm text-gray-500 space-y-2 md:text-left text-center">
+      <p class="flex items-center justify-center md:justify-start">
+        <svg class="w-4 h-4 mr-1 fill-current"><use xlink:href="#icon-location"/></svg>
+        〒104-0061 東京都中央区銀座1丁目12番4号
+      </p>
+      <p>© 2025 おうちDEピラティス®</p>
+    </div>
+
+    <!-- 右エリア（SNS＋リンク） -->
+    <div class="flex flex-col items-center md:items-end space-y-3 w-full md:w-auto">
+      
+      <!-- SNSアイコン -->
+      <div class="flex justify-center md:justify-end space-x-4">
+        <a href="#" aria-label="Twitter" class="hover:text-pink-500 transition">
+          <svg class="w-5 h-5 fill-current"><use xlink:href="#icon-twitter"/></svg>
+        </a>
+        <a href="#" aria-label="Instagram" class="hover:text-pink-500 transition">
+          <svg class="w-5 h-5 fill-current"><use xlink:href="#icon-instagram"/></svg>
+        </a>
+      </div>
+
+      <!-- 法律リンク -->
+      <div class="flex flex-wrap justify-center md:justify-end gap-x-3 gap-y-1 text-xs text-gray-500 mt-1">
+        <a href="/tokushoho" class="underline hover:text-pink-600 transition">特定商取引法に基づく表記</a>
+        <span class="hidden md:inline">|</span>
+        <a href="/privacy-policy" class="underline hover:text-pink-600 transition">プライバシーポリシー</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- フッターちゃん-->
+<!-- フッターちゃん-->
+<!-- フッターちゃん-->
+<!-- フッターちゃん-->
+<!-- フッターちゃん-->
+<!-- フッターちゃん-->
+<!-- フッターちゃん-->
+<!-- フッターちゃん-->
+<!-- フッターちゃん-->
+<!-- フッターちゃん-->
+<!-- フッターちゃん-->
+<!-- フッターちゃん-->
+<!-- フッターちゃん-->
+
+  <!-- Scripts: メニュー開閉 & カウントダウン -->
+  <script>
+
+const navToggle = document.getElementById('nav-toggle');
+const navMenu = document.getElementById('nav-menu');
+const iconOpen = document.getElementById('icon-open');
+const iconClose = document.getElementById('icon-close');
+
+navToggle.addEventListener('click', () => {
+  const isOpen = navMenu.classList.toggle('open');
+  navMenu.classList.toggle('hidden', !isOpen);
+  navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  navToggle.setAttribute('aria-label', isOpen ? 'メニューを閉じる' : 'メニューを開く');
+
+  iconOpen.classList.toggle('hidden', isOpen);
+  iconClose.classList.toggle('hidden', !isOpen);
+});
+
+// リンククリックでメニューを閉じる（モバイル用）
+navMenu.addEventListener('click', e => {
+  if (e.target.tagName === 'A') {
+    navMenu.classList.remove('open');
+    navMenu.classList.add('hidden');
+    navToggle.setAttribute('aria-expanded', 'false');
+    navToggle.setAttribute('aria-label', 'メニューを開く');
+    iconOpen.classList.remove('hidden');
+    iconClose.classList.add('hidden');
+  }
+});
+　　
+
+    // カウントダウンタイマー
+    const countdownEl = document.getElementById('countdown');
+    if (countdownEl) {
+      const deadline = new Date('2025-05-31T23:59:59+09:00');
+      const pad = n => String(n).padStart(2, '0');
+      const update = () => {
+        const diff = deadline - new Date();
+        if (diff <= 0) { clearInterval(timer); countdownEl.textContent = '00日 00:00:00'; return; }
+        const d = Math.floor(diff / (1000*60*60*24));
+        const h = Math.floor((diff / (1000*60*60)) % 24);
+        const m = Math.floor((diff / (1000*60)) % 60);
+        const s = Math.floor((diff / 1000) % 60);
+        countdownEl.textContent = `${pad(d)}日 ${pad(h)}:${pad(m)}:${pad(s)}`;
+      };
+      update();
+      const timer = setInterval(update, 1000);
+    }
+  </script>
+
+<script>
+  window.addEventListener('load', () => {
+    const splash = document.getElementById('splash');
+    splash.classList.add('opacity-0');
+    setTimeout(() => splash.style.display = 'none', 800);
+  });
+</script>
+
+<script>
+  // モーダル表示
+  document.getElementById('installment-link').addEventListener('click', function(e) {
+    e.preventDefault();
+    document.getElementById('modal-installment').classList.remove('hidden');
+    document.getElementById('modal-installment').classList.add('flex');
+  });
+
+  // モーダル閉じる関数
+  function closeModal() {
+    const modal = document.getElementById('modal-installment');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }
+
+  // 背景クリックで閉じる
+  document.getElementById('modal-installment').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  // Escキーで閉じる
+  document.addEventListener('keydown', function(e) {
+    if (e.key === "Escape") closeModal();
+  });
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  function startTypewriter(el) {
+    if (el.dataset.typed) return; // 2度書き防止
+    el.dataset.typed = "done";
+    const text = el.dataset.text;
+    let i = 0;
+    el.textContent = '';
+    const cursor = document.createElement('span');
+    cursor.className = 'typewriter-cursor';
+    cursor.textContent = '｜';
+    el.appendChild(cursor);
+
+    function type() {
+      if (i < text.length) {
+        if (text[i] === '\n') {
+          el.insertBefore(document.createElement('br'), cursor);
+        } else {
+          cursor.insertAdjacentText('beforebegin', text[i]);
+        }
+        i++;
+        setTimeout(type, 125); // 速さをここで調整
+      } else {
+        cursor.remove();
+      }
+    }
+    type();
+  }
+
+  // IntersectionObserverで監視
+  const observer = new window.IntersectionObserver(
+    (entries, observer) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          startTypewriter(entry.target);
+          observer.unobserve(entry.target); // 一度だけ発火
+        }
+      });
+    },
+    { threshold: 0.4 } // 40%表示で発火（調整OK）
+  );
+
+  // typewriter要素を監視
+  document.querySelectorAll('.typewriter').forEach(el => {
+    observer.observe(el);
+  });
+});
+</script>
+
+<script>
+(function(){if(!window.chatbase||window.chatbase("getState")!=="initialized"){window.chatbase=(...arguments)=>{if(!window.chatbase.q){window.chatbase.q=[]}window.chatbase.q.push(arguments)};window.chatbase=new Proxy(window.chatbase,{get(target,prop){if(prop==="q"){return target.q}return(...args)=>target(prop,...args)}})}const onLoad=function(){const script=document.createElement("script");script.src="https://www.chatbase.co/embed.min.js";script.id="qa6kcttD-PZs9Tfua71XZ";script.domain="www.chatbase.co";document.body.appendChild(script)};if(document.readyState==="complete"){onLoad()}else{window.addEventListener("load",onLoad)}})();
+</script>
+
+</script>
+
+  <!-- Mobile Floating CTA -->
+<!-- Mobile Floating CTA -->
+  <!-- Mobile Floating CTA -->
+  <a href="#price"
+     class="md:hidden fixed bottom-0 inset-x-0 z-30 flex items-center justify-center
+            bg-pink-500 text-white font-semibold py-3 shadow-lg transition-colors
+            hover:bg-pink-600">
+    今すぐチェック！・残り7台
+  </a>
+
+<script>
+(() => {
+  const pilatesCities = [
+    "代官山（渋谷区）", "表参道（港区）", "恵比寿（渋谷区）", "二子玉川（世田谷区）", "吉祥寺（武蔵野市）",
+    "芦屋市", "西宮市", "苦楽園（西宮市）", "鎌倉市", "逗子市", "青葉区（横浜市）", "藤沢市", "軽井沢町", "箱根町",
+    "北鎌倉（鎌倉市）", "左京区（京都市）", "東区（名古屋市）", "中央区（福岡市）", "円山（札幌市中央区）", "岡本（神戸市東灘区）"
+  ];
+  const normalCities = [
+    "札幌市", "函館市", "仙台市", "金沢市", "那覇市", "京都市", "名古屋市", "松本市", "福岡市", "神戸市",
+    "千葉市", "新潟市", "横浜市", "岡山市", "広島市", "高松市", "宇都宮市", "さいたま市"
+  ];
+  function randomCity() {
+    return (Math.random() < 0.7 ? pilatesCities : normalCities)[Math.floor(Math.random() * (Math.random() < 0.7 ? pilatesCities : normalCities).length)];
+  }
+  function getFakeDate(daysAgo) {
+    const date = new Date();
+    date.setDate(date.getDate() - daysAgo);
+    return date.toLocaleDateString('ja-JP', { year:'numeric', month:'2-digit', day:'2-digit' });
+  }
+  const maskName  = () => '****';
+  const maskPrice = () => '****';
+
+  // 注文データを1ヶ月（30日前）から2日ごと生成
+  const orderList = [];
+  for (let i = 15; i >= 0; i--) {
+    orderList.push({
+      date: getFakeDate(i*2),
+      city: randomCity(),
+      name: maskName(),
+      price: maskPrice()
+    });
+  }
+
+  let topIndex = 0;
+  const maxView = 5;
+  const tbody = document.getElementById('order-body');
+
+  // レンダリング
+  function renderTable(animate = false) {
+    tbody.innerHTML = '';
+    for (let i = 0; i < maxView; i++) {
+      const order = orderList[(topIndex + i) % orderList.length];
+      const tr = document.createElement('tr');
+      tr.className = i % 2 ? 'bg-pink-50' : '';
+      tr.innerHTML = `
+        <td class="px-3 py-2 whitespace-nowrap">${order.date}</td>
+        <td class="px-3 py-2">${order.city}</td>
+        <td class="px-3 py-2">${order.name}</td>
+        <td class="px-3 py-2 text-right">${order.price}</td>
+      `;
+      if (i === 0 && animate) tr.classList.add('bg-yellow-100', 'order-fadein');
+      tbody.appendChild(tr);
+    }
+    // アニメ後に色戻す
+    if (animate) {
+      setTimeout(() => {
+        const first = tbody.querySelector('tr');
+        if (first) first.classList.remove('bg-yellow-100', 'order-fadein');
+      }, 900);
+    }
+  }
+
+  // CSSアニメ追加
+  const style = document.createElement('style');
+  style.textContent = `
+    #order-body tr.order-fadein {
+      animation: orderfade 0.9s cubic-bezier(.77,0,.175,1);
+    }
+    @keyframes orderfade {
+      0%   { opacity: 0; transform: translateY(32px); }
+      50%  { background-color: #fde68a; }
+      100% { opacity: 1; transform: translateY(0); background-color: transparent;}
+    }
+  `;
+  document.head.appendChild(style);
+
+  renderTable();
+
+  // 3秒ごとにスクロール（5件ループ表示）
+  setInterval(() => {
+    topIndex = (topIndex + 1) % orderList.length;
+    renderTable(true);
+  }, 3000);
+
+})();
+</script>
 </body>
 </html>
